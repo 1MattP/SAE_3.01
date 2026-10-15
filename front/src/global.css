@@ -1,0 +1,175 @@
+@import "tailwindcss";
+
+/*
+  Le thème sombre s'active par la classe theme-dark posée sur <html> (voir
+  index.html et lib/theme.js), et non par le réglage du système : c'est ce que
+  déclare cette variante. Une classe préfixée par dark: s'applique donc dès que
+  la page est en thème sombre.
+*/
+@custom-variant dark (&:where(.theme-dark, .theme-dark *));
+
+@layer base {
+  /* Menus déroulants et barres de défilement natifs, eux aussi en sombre. */
+  .theme-dark {
+    color-scheme: dark;
+  }
+
+  /* Un seul anneau de focus pour toute l'application, visible uniquement au
+     clavier : :focus-visible ne se déclenche pas sur un clic de souris. */
+  :where(a, button, select, input):focus-visible {
+    outline: 2px solid var(--color-zinc-400);
+    outline-offset: 2px;
+  }
+
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@theme inline {
+  --color-background-default: var(--background-default);
+  --color-background-subtle: var(--background-subtle);
+  --color-background-inverse: var(--background-inverse);
+
+  --color-surface-default: var(--surface-default);
+  --color-surface-disabled: var(--surface-disabled);
+  --color-surface-image: var(--surface-image);
+  --color-surface-hover: var(--surface-hover);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-disabled: var(--text-disabled);
+  --color-text-inverse: var(--text-inverse);
+
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-active: var(--border-active);
+
+  --color-action-primary-background: var(--action-primary-background);
+  --color-action-primary-hover: var(--action-primary-hover);
+  --color-action-primary-foreground: var(--action-primary-foreground);
+  --color-action-secondary-foreground: var(--action-secondary-foreground);
+  --color-action-secondary-border: var(--action-secondary-border);
+  --color-action-secondary-border-hover: var(--action-secondary-border-hover);
+  --color-action-inverse-background: var(--action-inverse-background);
+  --color-action-inverse-foreground: var(--action-inverse-foreground);
+  --color-action-inverse-hover: var(--action-inverse-hover);
+
+  --color-icon-primary: var(--icon-primary);
+  --color-icon-secondary: var(--icon-secondary);
+
+  /* font-body, font-components */
+  --font-body: var(--font-family-body);
+  --font-components: var(--font-family-components);
+
+  /* text-caption-xs, text-caption, text-body-sm, text-body, text-body-lg… */
+  --text-caption-xs: var(--font-size-caption-xs);
+  --text-caption: var(--font-size-caption);
+  --text-body-sm: var(--font-size-body-sm);
+  --text-body: var(--font-size-body);
+  --text-body-lg: var(--font-size-body-lg);
+  --text-heading-sm: var(--font-size-heading-sm);
+  --text-heading-lg: var(--font-size-heading-lg);
+  --text-heading-section: var(--font-size-heading-section);
+  --text-display-hero: var(--font-size-display-hero);
+}
+
+@layer base {
+  :root {
+
+    /*  token  Primitives*/
+    --neutral-0: #ffffff;
+    --neutral-100: #f5f5f5;
+    --neutral-200: #e5e5e5;
+    --neutral-300: #cacacb;
+    --neutral-600: #707072;
+    --neutral-800: #28282a;
+    --neutral-900: #111111;
+    --neutral-950: #000000;
+
+    /* Typographie */
+    --font-family-body: "Roboto", sans-serif;
+    --font-family-components: "Inter", sans-serif;
+
+    /*Font Weights*/
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-weight-black: 900;
+
+    /*Font Sizes*/
+    --font-size-caption-xs: 0.625rem;
+    --font-size-caption: 0.75rem;
+    --font-size-body-sm: 0.875rem;
+    --font-size-body: 1rem;
+    --font-size-body-lg: 1.25rem;
+    --font-size-heading-sm: 1.5rem;
+    --font-size-heading-lg: 2rem;
+    --font-size-heading-section: 2.5rem;
+    --font-size-display-hero: 4.5rem;
+
+
+    /* Tokens Sémantiques */
+
+    --background-default: var(--neutral-0);
+    --background-subtle: var(--neutral-100);
+    --background-inverse: var(--neutral-900);
+
+    --surface-default: var(--neutral-0);
+    --surface-disabled: var(--neutral-200);
+    --surface-image: var(--neutral-100);
+    --surface-hover: var(--neutral-200);
+
+    --text-primary: var(--neutral-900);
+    --text-secondary: var(--neutral-600);
+    --text-disabled: var(--neutral-300);
+    --text-inverse: var(--neutral-0);
+
+    --border-default: var(--neutral-200);
+    --border-strong: var(--neutral-600);
+    --border-subtle: var(--neutral-300);
+    --border-active: var(--neutral-900);
+
+    --action-primary-background: var(--neutral-900);
+    --action-primary-hover: var(--neutral-600);
+    --action-primary-foreground: var(--neutral-0);
+
+    --action-secondary-foreground: var(--neutral-900);
+    --action-secondary-border: var(--neutral-300);
+    --action-secondary-border-hover: var(--neutral-900);
+
+    --action-inverse-background: var(--neutral-0);
+    --action-inverse-foreground: var(--neutral-900);
+    --action-inverse-hover: var(--neutral-300);
+
+    --icon-primary: var(--neutral-900);
+    --icon-secondary: var(--neutral-600);
+  }
+
+  
+  .theme-dark {
+    --background-default: var(--neutral-950);
+    --background-subtle: var(--neutral-900);
+    --background-inverse: var(--neutral-0);
+
+    --surface-default: var(--neutral-950);
+    --surface-disabled: var(--neutral-800);
+    --surface-image: var(--neutral-900);
+    --surface-hover: var(--neutral-800);
+
+    --text-primary: var(--neutral-0);
+    --text-secondary: var(--neutral-300);
+    --text-disabled: var(--neutral-600);
+    --text-inverse: var(--neutral-900);
+
+    --border-default: var(--neutral-800);
+    --border-strong: var(--neutral-300);
+    --border-subtle: var(--neutral-600);
+    --border-active: var(--neutral-0);
+
+    --icon-primary: var(--neutral-0);
+    --icon-secondary: var(--neutral-300);
+  }
+}

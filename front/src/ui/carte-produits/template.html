@@ -1,0 +1,18 @@
+<article class="flex flex-col items-start p-0 gap-0 flex-1">
+  <div class="flex h-55 p-0 flex-col justify-center items-center gap-0  overflow-hidden">
+    <img src="{{image}}" alt="{{titre}}" class="flex-1 self-stretch">
+  </div>
+
+  <div class="flex flex-col items-start px-4 pt-4 pb-5 gap-3">
+    <div class="flex items-center gap-1.5 p-0">
+      <slot name="couleurs"></slot>
+    </div>
+    
+    <div class="flex flex-col items-start gap-1 p-0">
+        <h2 class="text-text-primary font-body text-sm font-semibold ">{{titre}}</h2>
+        <p class="text-text-secondary font-body text-xs font-normal">{{description}}</p>
+    </div>
+
+    <p class="text-text-primary font-body text-base font-bold">{{prix}}</p>
+  </div>
+</article>
