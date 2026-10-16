@@ -9,6 +9,8 @@ const router = new Router("app", { base: import.meta.env.BASE_URL });
 
 router.addLayout("/", RootLayout);
 
+router.addRoute("/categorie/:nom", CataloguePage);
+
 router.addRoute("/", CataloguePage);
 // router.addRoute("/admin", AdminPage);
 

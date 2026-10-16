@@ -60,27 +60,27 @@ try {
     // Les dépendances sont créées explicitement : le modèle reçoit la connexion,
     // le contrôleur reçoit le modèle. Aucune magie, tout est lisible ici.
     $controleurs = [
-        CatalogueController::class => new CatalogueController(new ProduitModel($pdo)),
+                        CatalogueController::class => new CatalogueController(new ProduitModel($pdo)),
         // AuthController::class      => new AuthController(),
         // StatsController::class     => new StatsController(new FilmModel($pdo)),
     ];
 
     $routes = require __DIR__ . '/src/routes.php';
 
-    // // --- Session : réglage unique, avant tout contrôleur --------------------
-    // // PHP n'envoie le cookie PHPSESSID qu'au moment où il crée la session : ses
-    // // paramètres doivent donc être fixés ici, avant session_start(), et nulle
-    // // part ailleurs.
-    // ini_set('session.use_strict_mode', '1');
+    // --- Session : réglage unique, avant tout contrôleur --------------------
+    // PHP n'envoie le cookie PHPSESSID qu'au moment où il crée la session : ses
+    // paramètres doivent donc être fixés ici, avant session_start(), et nulle
+    // part ailleurs.
+    ini_set('session.use_strict_mode', '1');
 
-    // session_set_cookie_params([
-    //     'path'     => $config['chemin'],
-    //     'httponly' => true,
-    //     'secure'   => true,
-    //     'samesite' => 'Lax',
-    // ]);
+    session_set_cookie_params([
+        'path'     => $config['chemin'],
+        'httponly' => true,
+        'secure'   => true,
+        'samesite' => 'Lax',
+    ]);
 
-    // session_start();
+    session_start();
 
     (new Router($routes, $controleurs))->traiter(Request::depuisGlobals());
 } catch (Throwable $e) {

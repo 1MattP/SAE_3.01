@@ -17,53 +17,80 @@ final class ProduitModel
     /** Connexion à la base, fournie à la construction. */
     private PDO $pdo;
 
-    public function __construct(PDO $pdo)
+        public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
     }
 
-    /**
-     * Nombre de films du catalogue.
-     */
-    public function compter(): int
+    public function compter(int $categorie): int
     {
-        return (int) $this->pdo->query('SELECT COUNT(*) FROM produit')->fetchColumn();
-    }
-
-    /**
-     * Une page du catalogue.
-     *
-     * @param string $ordre  Fragment SQL de tri, par exemple « film.titre ASC ».
-     *                       ATTENTION : ce fragment est inséré tel quel dans la
-     *                       requête. Il ne doit JAMAIS provenir directement de
-     *                       l'utilisateur — voir la liste blanche du contrôleur.
-     * @param int    $limite Nombre de films à renvoyer.
-     * @param int    $decalage Nombre de films à sauter (pagination).
-     */
-    public function lister(string $ordre, int $limite, int $decalage): array
-    {
-        $sql = "SELECT produit.id,
-                       produit.titre,
-                       produit.description,
-                       produit.prix,
-                       produit.couleurs,
-                       produit.image,
-                       categorie.libelle AS categorie
-                  FROM produit
-            INNER JOIN categorie ON categorie.id = produit.categorie_id
-              ORDER BY {$ordre}, produit.id
-                 LIMIT :limite OFFSET :decalage";
+        $sql = 'SELECT COUNT(*)
+                FROM produit
+                WHERE :toutes = 0 OR produit.categorie_id = :categorie';
 
         $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':toutes',    $categorie, PDO::PARAM_INT);
+        $requetePreparee->bindValue(':categorie', $categorie, PDO::PARAM_INT);
+        $requetePreparee->execute();
 
-        // Les valeurs, elles, sont bien liées : c'est le rôle des paramètres.
-        $requetePreparee->bindValue(':limite',   $limite,   PDO::PARAM_INT);
-        $requetePreparee->bindValue(':decalage', $decalage, PDO::PARAM_INT);
+        return (int) $requetePreparee->fetchColumn();
+    }
 
+    public function lister(int $categorie, int $limite, int $decalage): array
+    {
+        $sql = "SELECT produit.id,
+                    produit.titre,
+                    produit.description,
+                    produit.prix,
+                    produit.couleurs,
+                    produit.image,
+                    categorie.libelle AS categorie
+                FROM produit
+            INNER JOIN categorie ON categorie.id = produit.categorie_id
+                WHERE :toutes = 0 OR produit.categorie_id = :categorie
+            ORDER BY produit.titre, produit.id
+                LIMIT :limite OFFSET :decalage";
+
+        $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':toutes',    $categorie, PDO::PARAM_INT);
+        $requetePreparee->bindValue(':categorie', $categorie, PDO::PARAM_INT);
+        $requetePreparee->bindValue(':limite',    $limite,    PDO::PARAM_INT);
+        $requetePreparee->bindValue(':decalage',  $decalage,  PDO::PARAM_INT);
         $requetePreparee->execute();
 
         return $requetePreparee->fetchAll();
     }
+
+
+    /**
+     * Les catégories avec leur nombre de produits (0 si elle est vide).
+     */
+    public function categories(): array
+    {
+        $sql = 'SELECT categorie.id,
+                       categorie.libelle,
+                       COUNT(produit.id) AS nombre
+                  FROM categorie
+              LEFT JOIN produit ON produit.categorie_id = categorie.id
+              GROUP BY categorie.id, categorie.libelle
+              ORDER BY categorie.id';
+
+              $lignes = $this->pdo->query($sql)->fetchAll();
+
+              $categories = [];
+
+                foreach ($lignes as $ligne) {
+                    $categories[] = [
+                        'id'      => (int) $ligne['id'],
+                        'libelle' => $ligne['libelle'],
+                        'nombre'  => (int) $ligne['nombre'],
+                    ];
+                }
+
+        return $categories;
+
+    }
+
 
 
 }

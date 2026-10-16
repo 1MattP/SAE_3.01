@@ -4,7 +4,14 @@
     <slot></slot>
   </main>
 </div>
-`;function a(){return r(i)}var o=`/~pages39/SAE301/Base/api/`,s=class extends Error{constructor(e,t){super(e),this.name=`ErreurApi`,this.statut=t}},c=async function(e,t){let n=await fetch(o+e,t),r=null;try{r=await n.json()}catch{throw new s(`Réponse illisible du serveur.`,n.status)}if(!n.ok)throw new s(r?.erreur??`Erreur ${n.status}`,n.status);return r},l=function(e){return c(e,{method:`GET`,headers:{Accept:`application/json`}})},u={};u.fetchPage=async function(e){return l(`produits?page=${e}`)};function d(e){return Number(e).toFixed(2).replace(`.`,`,`)+` €`}var f=`<article class="flex flex-col items-start p-0 gap-0 flex-1">
+`;function a(){return r(i)}var o=`/~pages39/SAE301/Base/api/`,s=class extends Error{constructor(e,t){super(e),this.name=`ErreurApi`,this.statut=t}},c=async function(e,t){let n=await fetch(o+e,t),r=null;try{r=await n.json()}catch{throw new s(`Réponse illisible du serveur.`,n.status)}if(!n.ok)throw new s(r?.erreur??`Erreur ${n.status}`,n.status);return r},l=function(e){return c(e,{method:`GET`,headers:{Accept:`application/json`}})},u={};u.fetchPage=async function(e,t){let n=`produits?page=${e}`;return t!==void 0&&t.categorie!==null&&(n+=`&categorie=${t.categorie}`),l(n)};var d=`<nav aria-label="Catégories" class="flex items-start rounded-1.5 mb-15">
+  <slot name="onglets"></slot>
+</nav>
+`,f=`<a href="{{lien}}"  data-link class="flex w-75.5 h-15.5 px-6  items-center gap-5  rounded-none border border-border-default bg-surface-disabled hover:bg-surface-hover font-body text-body-sm font-semibold text-text-secondary aria-[current=page]:bg-background-inverse aria-[current=page]:text-text-inverse aria-[current=page]:hover:bg-background-inverse">
+  <span>{{libelle}}</span>
+  <span>({{nombre}})</span>
+</a>
+`,p={html:function(e){return n(d,e)},dom:function(e){let t=r(p.html(e)),i=e.categories.map(e=>{let t=`/`;return e.id!==0&&(t=`/categorie/`+encodeURIComponent(e.libelle)),r(n(f,{lien:t,libelle:e.libelle,nombre:e.nombre}))});return t.querySelector(`slot[name="onglets"]`).replaceWith(...i),t}};function m(e){return Number(e).toFixed(2).replace(`.`,`,`)+` €`}function h(e){return`/~pages39/SAE301/Base/`+e}var g=`<article class="flex flex-col items-start p-0 gap-0 flex-1">
   <div class="flex h-55 p-0 flex-col justify-center items-center gap-0  overflow-hidden">
     <img src="{{image}}" alt="{{titre}}" class="flex-1 self-stretch">
   </div>
@@ -22,12 +29,12 @@
     <p class="text-text-primary font-body text-base font-bold">{{prix}}</p>
   </div>
 </article>
-`,p=`<span class="w-4.5 h-4.5 rounded-full border border-border-default bg-(--couleur)" style="--couleur: {{couleur}}"></span>
-`,m={html:function(e){return n(f,{titre:e.titre,description:e.description,prix:d(e.prix),image:m.adresseImage(e.image)})},dom:function(e){let t=r(m.html(e)),i=e.couleurs.split(`,`).map(e=>r(n(p,{couleur:e.trim()})));return t.querySelector(`slot[name="couleurs"]`).replaceWith(...i),t},adresseImage:function(e){return e?/^https?:\/\//.test(e)?e:`/~pages39/SAE301/Base/`+e.replace(/^\//,``):``}},h=`<div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+`,_=`<span class="w-4.5 h-4.5 rounded-full border border-border-default bg-(--couleur)" style="--couleur: {{couleur}}"></span>
+`,v={html:function(e){return n(g,{titre:e.titre,description:e.description,prix:m(e.prix),image:h(e.image)})},dom:function(e){let t=r(v.html(e)),i=e.couleurs.split(`,`).map(e=>r(n(_,{couleur:e.trim()})));return t.querySelector(`slot[name="couleurs"]`).replaceWith(...i),t}},y=`<div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
   <slot name="cartes"></slot>
-</div>`,g=`<p class="text-sm text-zinc-500 dark:text-zinc-400">Aucun produit à afficher.</p>
-`,_={dom:function(e){if(e.length===0)return r(g);let t=r(h),n=e.map(e=>m.dom(e));return t.querySelector(`slot[name="cartes"]`).replaceWith(...n),t}},v=`<p role="status" class="mb-6 rounded-md border px-4 py-3 text-sm {{couleurs}}">{{texte}}</p>
-`,y={erreur:`border-red-700 text-red-700 dark:border-red-400 dark:text-red-400`,succes:`border-green-700 text-green-700 dark:border-green-400 dark:text-green-400`},b={html:function(e){return e===null?``:n(v,{texte:e.texte,couleurs:y[e.type]})},dom:function(e){return r(b.html(e))}},x=`<nav class="mt-10 flex items-center justify-center gap-4">
+</div>`,b=`<p class="text-sm text-zinc-500 dark:text-zinc-400">Aucun produit à afficher.</p>
+`,x={dom:function(e){if(e.length===0)return r(b);let t=r(y),n=e.map(e=>v.dom(e));return t.querySelector(`slot[name="cartes"]`).replaceWith(...n),t}},S=`<p role="status" class="mb-6 rounded-md border px-4 py-3 text-sm {{couleurs}}">{{texte}}</p>
+`,C={erreur:`border-red-700 text-red-700 dark:border-red-400 dark:text-red-400`,succes:`border-green-700 text-green-700 dark:border-green-400 dark:text-green-400`},w={html:function(e){return e===null?``:n(S,{texte:e.texte,couleurs:C[e.type]})},dom:function(e){return r(w.html(e))}},T=`<nav class="mt-10 flex items-center justify-center gap-4">
   <button type="button" data-action="precedente" class="h-9 rounded-md border border-zinc-200 px-4 text-sm font-medium transition-colors hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent dark:border-zinc-800 dark:hover:bg-zinc-800">
     Précédent
   </button>
@@ -38,15 +45,16 @@
     Suivant
   </button>
 </nav>
-`,S={html:function(e){return n(x,e)},dom:function(e,t){let n=r(S.html(e)),i=n.querySelector(`[data-action="precedente"]`),a=n.querySelector(`[data-action="suivante"]`);return i.disabled=e.page<=1,a.disabled=e.page>=e.pagesTotal,i.addEventListener(`click`,()=>t.surPage(e.page-1)),a.addEventListener(`click`,()=>t.surPage(e.page+1)),n}},C=`<section class="mx-auto max-w-5xl px-6 pt-10 pb-16">
-
+`,E={html:function(e){return n(T,e)},dom:function(e,t){let n=r(E.html(e)),i=n.querySelector(`[data-action="precedente"]`),a=n.querySelector(`[data-action="suivante"]`);return i.disabled=e.page<=1,a.disabled=e.page>=e.pagesTotal,i.addEventListener(`click`,()=>t.surPage(e.page-1)),a.addEventListener(`click`,()=>t.surPage(e.page+1)),n}},D=`<section class="mx-auto max-w-5xl px-6 pt-10 pb-16">
+  
   <slot name="message"></slot>
+  <slot name="categorie"></slot>
   <slot name="grille"></slot>
   <slot name="pagination"></slot>
 </section>
-`,w={catalogue:null,message:null},T={};T.charger=async function(e){try{w.catalogue=await u.fetchPage(e),w.message=null}catch(e){w.catalogue=null,w.message={type:`erreur`,texte:`Impossible de charger le catalogue : ${e.message}`}}},T.handler_changerPage=async function(e){await T.charger(e),E.rafraichir(),window.scrollTo({top:0,behavior:`smooth`})},T.init=async function(){return await T.charger(1),E.init()};var E={};E.racine=null,E.init=function(){let e=E.createPageFragment();return E.racine=e.firstElementChild,e},E.rafraichir=function(){let e=E.createPageFragment(),t=e.firstElementChild;E.racine.replaceWith(e),E.racine=t},E.createPageFragment=function(){let e=r(C);if(e.querySelector(`slot[name="message"]`).replaceWith(b.dom(w.message)),w.catalogue===null){for(let t of e.querySelectorAll(`slot`))t.remove();return e}return e.querySelector(`slot[name="grille"]`).replaceWith(_.dom(w.catalogue.produits)),e.querySelector(`slot[name="pagination"]`).replaceWith(S.dom(w.catalogue,{surPage:T.handler_changerPage})),e};function D(){return T.init()}var O=`<section class="mx-auto max-w-5xl px-6 pt-10 pb-16">
+`,O={catalogue:null,categories:[],categorie:null,message:null},k={};k.charger=async function(e){try{O.catalogue=await u.fetchPage(e,{categorie:O.categorie}),O.categories=O.catalogue.categories,O.message=null}catch(e){O.catalogue=null,O.message={type:`erreur`,texte:`Impossible de charger le catalogue : ${e.message}`}}},k.handler_changerPage=async function(e){await k.charger(e),A.rafraichir(),window.scrollTo({top:0,behavior:`smooth`})},k.init=async function(e){return O.categorie=null,e.nom!==void 0&&(O.categorie=e.nom),await k.charger(1),A.init()};var A={};A.racine=null,A.init=function(){let e=A.createPageFragment();return A.racine=e.firstElementChild,e},A.rafraichir=function(){let e=A.createPageFragment(),t=e.firstElementChild;A.racine.replaceWith(e),A.racine=t},A.createPageFragment=function(){let e=r(D);if(e.querySelector(`slot[name="message"]`).replaceWith(w.dom(O.message)),O.catalogue===null){for(let t of e.querySelectorAll(`slot`))t.remove();return e}return e.querySelector(`slot[name="categorie"]`).replaceWith(p.dom({categories:O.categories})),e.querySelector(`slot[name="grille"]`).replaceWith(x.dom(O.catalogue.produits)),e.querySelector(`slot[name="pagination"]`).replaceWith(E.dom(O.catalogue,{surPage:k.handler_changerPage})),e};function j(e){return k.init(e)}var M=`<section class="mx-auto max-w-5xl px-6 pt-10 pb-16">
   <h1 class="mb-6 text-2xl font-semibold tracking-tight">Page introuvable</h1>
   <p class="mb-6 text-sm text-zinc-500 dark:text-zinc-400">Cette page n'existe pas.</p>
   <a href="/" data-link class="text-sm font-medium underline underline-offset-4">Retour au catalogue</a>
 </section>
-`;function k(){return O}var A=new e(`app`,{base:`/~pages39/SAE301/Base/`});A.addLayout(`/`,a),A.addRoute(`/`,D),A.addRoute(`*`,k),A.start();
+`;function N(){return M}var P=new e(`app`,{base:`/~pages39/SAE301/Base/`});P.addLayout(`/`,a),P.addRoute(`/categorie/:nom`,j),P.addRoute(`/`,j),P.addRoute(`*`,N),P.start();
