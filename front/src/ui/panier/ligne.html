@@ -1,0 +1,23 @@
+<div class="flex flex-wrap items-center gap-x-4 gap-y-3 border-b border-border-default py-5">
+  <img src="{{image}}" alt="{{titre}}" class="size-16 shrink-0 rounded-md bg-surface-image object-cover">
+
+  <div class="flex min-w-0 flex-1 flex-col gap-1">
+    <a href="{{link}}" data-link class="text-body-sm font-semibold">{{titre}}</a>
+    <p class="text-caption text-text-secondary">Prix unitaire : {{prix}}</p>
+  </div>
+
+  <div class="flex w-full items-center justify-between gap-4 sm:w-auto">
+    <div class="flex items-center gap-2">
+      <button type="button" data-action="minus" data-url-name="{{urlName}}" class="size-8 rounded-sm bg-surface-image hover:bg-surface-hover disabled:cursor-not-allowed disabled:text-text-disabled">−</button>
+      <span class="w-6 text-center text-body-sm">{{quantity}}</span>
+      <button type="button" data-action="plus" data-url-name="{{urlName}}" class="size-8 rounded-sm bg-surface-image hover:bg-surface-hover">+</button>
+    </div>
+
+    <p class="text-right text-body-sm font-semibold sm:w-20">{{total}}</p>
+
+    <button type="button" data-action="delete" data-url-name="{{urlName}}" class="flex size-8 items-center justify-center rounded-md border border-border-default hover:bg-surface-hover">
+      <span class="sr-only pointer-events-none">Supprimer {{titre}}</span>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="pointer-events-none size-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12M9 7V5h6v2m-8 0 1 12h8l1-12M10 11v5m4-5v5"/></svg>
+    </button>
+  </div>
+</div>

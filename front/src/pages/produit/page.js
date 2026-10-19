@@ -1,4 +1,5 @@
 import { ProduitData } from "../../data/produits.js";
+import { PanierData } from "../../data/panier.js";
 import { htmlToFragment } from "../../lib/utils.js";
 import { DetailProduitView } from "../../ui/detail-produit/index.js";
 import { MessageView } from "../../ui/message/index.js";
@@ -12,9 +13,33 @@ let M = {
 };
 
 M.load = async function (urlName) {
+  M.produit = null;
+  M.message = null;
   let data = await ProduitData.fetchOne(urlName);
   M.produit = data.produit;
   M.selectedImage = M.produit.images[0];
+};
+
+M.addToCart = function () {
+  let lines = PanierData.load();
+  let line = lines.find(function (item) {
+    return item.urlName === M.produit.urlName;
+  });
+
+  if (line === undefined) {
+    lines.push({
+      urlName: M.produit.urlName,
+      titre: M.produit.titre,
+      prix: M.produit.prix,
+      image: M.produit.images[0],
+      quantity: 1,
+    });
+  } else {
+    line.quantity += 1;
+  }
+
+  PanierData.save(lines);
+  M.message = { type: "succes", texte: "Produit ajouté au panier." };
 };
 
 M.getPage = function () {
@@ -28,7 +53,7 @@ M.getPage = function () {
   }
 
   return {
-    message: null,
+    message: M.message,
     title: `${M.produit.titre} | Nike`,
     description: M.produit.descriptionLongue,
     detail: {
@@ -51,7 +76,10 @@ C.handler_clickOnThumbnail = function (ev) {
   V.rafraichir(M.getPage());
 };
 
-C.handler_clickOnAddToCart = function (ev) {};
+C.handler_clickOnAddToCart = function (ev) {
+  M.addToCart();
+  V.rafraichir(M.getPage());
+};
 
 C.init = async function (params) {
   try {

@@ -1,0 +1,15 @@
+<header class="sticky top-0 z-10 border-b border-border-default bg-background-default">
+  <div class="mx-auto flex  max-w-5xl flex-wrap items-center gap-6 px-6 py-3">
+    <a href="/" data-link class="text-body-sm font-semibold tracking-tight">SAE301-Starter</a>
+
+    <nav class="mr-auto flex gap-5 text-body-sm">
+      <a href="/" data-link class="text-text-secondary transition-colors hover:text-text-primary aria-[current=page]:font-medium aria-[current=page]:text-text-primary">Catalogue</a>
+    </nav>
+
+    <a href="/panier" data-link class="relative flex size-9 items-center justify-center rounded-full hover:bg-surface-hover">
+      <span class="sr-only">Panier</span>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="size-5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14l-1 12H6L5 8Zm4 0V7a3 3 0 0 1 6 0v1"/></svg>
+      <span class="absolute empty:hidden -top-0.5 -right-0.5 flex min-w-4 items-center justify-center rounded-full bg-action-primary-background px-1 text-caption-xs font-semibold text-action-primary-foreground">{{count}}</span>
+    </a>
+  </div>
+</header>
