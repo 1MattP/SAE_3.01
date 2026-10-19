@@ -77,6 +77,7 @@ final class ProduitModel
                        produit.description,
                        produit.description_longue,
                        produit.prix,
+                       produit.stock,
                        CASE WHEN produit.stock = 0 THEN 'epuise'
                             WHEN produit.stock <= :seuil THEN 'bientot_epuise'
                             ELSE 'en_stock' END AS etatStock,

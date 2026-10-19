@@ -2,6 +2,10 @@
   <div class="grid gap-8 lg:grid-cols-3 lg:gap-10">
     <div class="lg:col-span-2">
       <h1 class="border-b border-border-default pb-4 text-heading-lg font-bold sm:text-heading-section">Panier</h1>
+      <div class="mt-6">
+        <slot name="message"></slot>
+      </div>
+
       <slot name="panier"></slot>
     </div>
 

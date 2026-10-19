@@ -19,6 +19,7 @@ use App\Core\Router;
 use App\Controller\AuthController;
 use App\Controller\CatalogueController;
 use App\Controller\CommandeController;
+use App\Controller\PanierController;
 use App\Controller\ProduitController;
 // use App\Controller\StatsController;
 use App\Model\CommandeModel;
@@ -70,6 +71,7 @@ try {
         ProduitController::class   => new ProduitController(new ProduitModel($pdo, $seuilStock)),
         AuthController::class      => new AuthController(new UtilisateurModel($pdo)),
         CommandeController::class  => new CommandeController(new CommandeModel($pdo), new ProduitModel($pdo, $seuilStock)),
+        PanierController::class    => new PanierController(new ProduitModel($pdo, $seuilStock)),
         // StatsController::class     => new StatsController(new FilmModel($pdo)),
     ];
 

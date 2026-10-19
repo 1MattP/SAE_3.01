@@ -27,6 +27,7 @@ let PanierView = {
           total: formaterPrix(line.total),
         }));
         item.querySelector('[data-action="minus"]').disabled = line.quantity === 1;
+        item.querySelector('[data-action="plus"]').disabled = !line.canIncrease;
         return item;
       });
     }
