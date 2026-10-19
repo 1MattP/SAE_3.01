@@ -40,6 +40,7 @@ final class ProduitModel
     {
         $sql = "SELECT produit.id,
                     produit.titre,
+                    produit.nom_url AS urlName,
                     produit.description,
                     produit.prix,
                     produit.couleurs,
@@ -61,10 +62,44 @@ final class ProduitModel
         return $requetePreparee->fetchAll();
     }
 
+    public function trouverParNomUrl(string $urlName): ?array
+    {
+        $sql = 'SELECT produit.id,
+                       produit.titre,
+                       produit.nom_url AS urlName,
+                       produit.description,
+                       produit.description_longue,
+                       produit.prix,
+                       categorie.libelle AS categorie
+                  FROM produit
+            INNER JOIN categorie ON categorie.id = produit.categorie_id
+                 WHERE produit.nom_url = :urlName';
 
-    /**
-     * Les catégories avec leur nombre de produits (0 si elle est vide).
-     */
+        $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':urlName', $urlName, PDO::PARAM_STR);
+        $requetePreparee->execute();
+
+        $ligne = $requetePreparee->fetch();
+
+        return $ligne === false ? null : $ligne;
+    }
+
+
+    public function images(int $produit): array
+    {
+        $sql = 'SELECT url
+                  FROM image_produit
+                 WHERE produit_id = :produit
+              ORDER BY position';
+
+        $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':produit', $produit, PDO::PARAM_INT);
+        $requetePreparee->execute();
+
+        return $requetePreparee->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+
     public function categories(): array
     {
         $sql = 'SELECT categorie.id,

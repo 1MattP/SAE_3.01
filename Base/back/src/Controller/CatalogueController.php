@@ -26,9 +26,11 @@ final class CatalogueController
         $categories = [['id' => 0, 'libelle' => 'Tout', 'nombre' => 0]];
         $somme      = 0;
 
-        foreach ($this->produits->categories() as $ligne) {
-            $categories[] = $ligne;
-            $somme += $ligne['nombre'];
+        $lignes = $this->produits->categories();
+
+        for ($i = 0; $i < count($lignes); $i++) {
+            $categories[] = $lignes[$i];
+            $somme += $lignes[$i]['nombre'];
         }
 
         $categories[0]['nombre'] = $somme;
@@ -37,9 +39,9 @@ final class CatalogueController
         $demande   = $requete->parametre('categorie');
         $categorie = 0;
 
-        foreach ($categories as $ligne) {
-            if ($ligne['libelle'] === $demande) {
-                $categorie = $ligne['id'];
+        for ($i = 0; $i < count($categories); $i++) {
+            if ($categories[$i]['libelle'] === $demande) {
+                $categorie = $categories[$i]['id'];
             }
         }
 

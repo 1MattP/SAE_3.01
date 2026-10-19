@@ -13,7 +13,7 @@ let CategoriesView = {
   dom: function (data) {
     let fragment = htmlToFragment(CategoriesView.html(data));
 
-    let onglets = data.categories.map((categorie) => {
+    let onglets = data.categories.map(function (categorie) {
   
       let lien = "/";
       if (categorie.id !== 0) {

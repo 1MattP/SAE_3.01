@@ -11,7 +11,9 @@ let GrilleProduitView = {
     }
 
     let fragment = htmlToFragment(template);
-    let cartes = produits.map((produit) => CarteProduitView.dom(produit));
+    let cartes = produits.map(function (produit) {
+      return CarteProduitView.dom(produit);
+    });
     fragment.querySelector('slot[name="cartes"]').replaceWith(...cartes);
     return fragment;
   },
