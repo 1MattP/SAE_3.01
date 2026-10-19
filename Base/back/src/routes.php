@@ -26,5 +26,6 @@ return [
     'POST /api/logout'         => [AuthController::class,      'logout'],
     'GET  /api/me'             => [AuthController::class,      'me'],
     'POST /api/commandes'      => [CommandeController::class,  'create'],
+    'POST /api/commandes/annuler' => [CommandeController::class, 'cancel'],
     // 'GET  /api/admin/stats' => [StatsController::class,     'index'],
 ];

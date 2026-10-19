@@ -70,6 +70,10 @@ final class CommandeController
         $total  = round($somme, 2);
         $numero = $this->commandes->creer((int) $_SESSION['utilisateur'], $statut, $total, $lignes);
 
+        if ($numero === null) {
+            Response::erreur('Stock insuffisant pour un produit de votre commande.', 409);
+        }
+
         Response::json([
             'commande' => [
                 'numero' => $numero,
@@ -78,5 +82,26 @@ final class CommandeController
                 'lignes' => $lignes,
             ],
         ], 201);
+    }
+
+    public function cancel(Request $requete): void
+    {
+        if (($_SESSION['utilisateur'] ?? null) === null) {
+            Response::erreur('Vous devez être connecté pour annuler une commande.', 401);
+        }
+
+        $numero = (string) ($requete->corps()['numero'] ?? '');
+
+        if ($numero === '' || strlen($numero) > 20) {
+            Response::erreur('Numéro de commande invalide.', 400);
+        }
+
+        $statut = 'annulée';
+
+        if (!$this->commandes->annuler($numero, (int) $_SESSION['utilisateur'], 'en cours', $statut)) {
+            Response::erreur('Commande introuvable ou déjà traitée.', 404);
+        }
+
+        Response::json(['commande' => ['numero' => $numero, 'statut' => $statut]]);
     }
 }
