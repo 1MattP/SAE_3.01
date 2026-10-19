@@ -29,6 +29,10 @@ return [
         'motdepasse'  => 'pages39',
     ],
 
+    'stock' => [
+        'seuil_bientot_epuise' => 5,
+    ],
+
     // En développement, les erreurs sont détaillées dans la réponse JSON.
     // À passer à false en production.
     'debug' => true,

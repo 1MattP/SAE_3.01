@@ -17,9 +17,12 @@ final class ProduitModel
     /** Connexion à la base, fournie à la construction. */
     private PDO $pdo;
 
-        public function __construct(PDO $pdo)
+    private int $seuilStock;
+
+    public function __construct(PDO $pdo, int $seuilStock)
     {
-        $this->pdo = $pdo;
+        $this->pdo        = $pdo;
+        $this->seuilStock = $seuilStock;
     }
 
     public function compter(int $categorie): int
@@ -45,6 +48,9 @@ final class ProduitModel
                     produit.prix,
                     produit.couleurs,
                     produit.image,
+                    CASE WHEN produit.stock = 0 THEN 'epuise'
+                         WHEN produit.stock <= :seuil THEN 'bientot_epuise'
+                         ELSE 'en_stock' END AS etatStock,
                     categorie.libelle AS categorie
                 FROM produit
             INNER JOIN categorie ON categorie.id = produit.categorie_id
@@ -53,6 +59,7 @@ final class ProduitModel
                 LIMIT :limite OFFSET :decalage";
 
         $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':seuil',     $this->seuilStock, PDO::PARAM_INT);
         $requetePreparee->bindValue(':toutes',    $categorie, PDO::PARAM_INT);
         $requetePreparee->bindValue(':categorie', $categorie, PDO::PARAM_INT);
         $requetePreparee->bindValue(':limite',    $limite,    PDO::PARAM_INT);
@@ -64,18 +71,22 @@ final class ProduitModel
 
     public function trouverParNomUrl(string $urlName): ?array
     {
-        $sql = 'SELECT produit.id,
+        $sql = "SELECT produit.id,
                        produit.titre,
                        produit.nom_url AS urlName,
                        produit.description,
                        produit.description_longue,
                        produit.prix,
+                       CASE WHEN produit.stock = 0 THEN 'epuise'
+                            WHEN produit.stock <= :seuil THEN 'bientot_epuise'
+                            ELSE 'en_stock' END AS etatStock,
                        categorie.libelle AS categorie
                   FROM produit
             INNER JOIN categorie ON categorie.id = produit.categorie_id
-                 WHERE produit.nom_url = :urlName';
+                 WHERE produit.nom_url = :urlName";
 
         $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':seuil',   $this->seuilStock, PDO::PARAM_INT);
         $requetePreparee->bindValue(':urlName', $urlName, PDO::PARAM_STR);
         $requetePreparee->execute();
 

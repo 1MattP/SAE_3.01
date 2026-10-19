@@ -44,6 +44,7 @@ final class ProduitController
                 'descriptionLongue' => $produit['description_longue'],
                 'prix'              => $produit['prix'],
                 'categorie'         => $produit['categorie'],
+                'etatStock'         => $produit['etatStock'],
                 'images'            => $this->produits->images($id),
             ],
         ]);

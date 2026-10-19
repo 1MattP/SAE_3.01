@@ -63,11 +63,13 @@ try {
     // --- Assemblage ---------------------------------------------------------
     // Les dépendances sont créées explicitement : le modèle reçoit la connexion,
     // le contrôleur reçoit le modèle. Aucune magie, tout est lisible ici.
+    $seuilStock = $config['stock']['seuil_bientot_epuise'];
+
     $controleurs = [
-        CatalogueController::class => new CatalogueController(new ProduitModel($pdo)),
-        ProduitController::class   => new ProduitController(new ProduitModel($pdo)),
+        CatalogueController::class => new CatalogueController(new ProduitModel($pdo, $seuilStock)),
+        ProduitController::class   => new ProduitController(new ProduitModel($pdo, $seuilStock)),
         AuthController::class      => new AuthController(new UtilisateurModel($pdo)),
-        CommandeController::class  => new CommandeController(new CommandeModel($pdo), new ProduitModel($pdo)),
+        CommandeController::class  => new CommandeController(new CommandeModel($pdo), new ProduitModel($pdo, $seuilStock)),
         // StatsController::class     => new StatsController(new FilmModel($pdo)),
     ];
 
