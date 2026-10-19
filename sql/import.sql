@@ -27,6 +27,7 @@ SET time_zone = "+00:00";
 -- L'import est rejouable : image_produit est supprimée en premier, puis
 -- produit, car leurs clés étrangères dépendent de produit puis de categorie.
 --
+DROP TABLE IF EXISTS `utilisateur`;
 DROP TABLE IF EXISTS `image_produit`;
 DROP TABLE IF EXISTS `produit`;
 DROP TABLE IF EXISTS `categorie`;
@@ -150,6 +151,24 @@ UNION ALL SELECT 3
 UNION ALL SELECT 4
 ) AS positions
 WHERE produit.image IS NOT NULL;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `utilisateur`
+--
+-- mot_de_passe contient le hash bcrypt (60 caractères), jamais le mot de
+-- passe lui-même.
+--
+
+CREATE TABLE `utilisateur` (
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `email` varchar(190) NOT NULL,
+  `mot_de_passe` varchar(255) NOT NULL,
+  `date_creation` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_utilisateur_email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -16,11 +16,12 @@ use App\Core\Database;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\Router;
-// use App\Controller\AuthController;
+use App\Controller\AuthController;
 use App\Controller\CatalogueController;
 use App\Controller\ProduitController;
 // use App\Controller\StatsController;
 use App\Model\ProduitModel;
+use App\Model\UtilisateurModel;
 
 // --- Chargement automatique des classes ------------------------------------
 // App\Core\Router  ->  back/src/Core/Router.php
@@ -63,7 +64,7 @@ try {
     $controleurs = [
         CatalogueController::class => new CatalogueController(new ProduitModel($pdo)),
         ProduitController::class   => new ProduitController(new ProduitModel($pdo)),
-        // AuthController::class      => new AuthController(),
+        AuthController::class      => new AuthController(new UtilisateurModel($pdo)),
         // StatsController::class     => new StatsController(new FilmModel($pdo)),
     ];
 
