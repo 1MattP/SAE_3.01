@@ -68,7 +68,9 @@ C.handler_clickOnDelete = function (ev) {
   V.rafraichir(M.getPage());
 };
 
-C.handler_clickOnValidate = function (ev) {};
+C.handler_clickOnValidate = function (ev) {
+  V.redirect("validation");
+};
 
 C.init = function () {
   M.load();
@@ -91,6 +93,10 @@ V.rafraichir = function (data) {
   let nouvelleRacine = fragment.firstElementChild;
   V.racine.replaceWith(fragment);
   V.racine = nouvelleRacine;
+};
+
+V.redirect = function (path) {
+  window.location.assign(import.meta.env.BASE_URL + path);
 };
 
 V.createPageFragment = function (data) {

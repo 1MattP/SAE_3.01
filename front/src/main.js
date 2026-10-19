@@ -5,6 +5,7 @@ import { ProduitPage } from "./pages/produit/page.js";
 import { PanierPage } from "./pages/panier/page.js";
 import { ConnexionPage } from "./pages/connexion/page.js";
 import { InscriptionPage } from "./pages/inscription/page.js";
+import { ValidationPage } from "./pages/validation/page.js";
 // import { AdminPage } from "./pages/admin/page.js";
 import { The404Page } from "./pages/404/page.js";
 
@@ -22,6 +23,8 @@ router.addRoute("/panier", PanierPage);
 router.addRoute("/connexion", ConnexionPage);
 
 router.addRoute("/inscription", InscriptionPage);
+
+router.addRoute("/validation", ValidationPage);
 
 router.addRoute("/", CataloguePage);
 // router.addRoute("/admin", AdminPage);

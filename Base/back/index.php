@@ -18,8 +18,10 @@ use App\Core\Response;
 use App\Core\Router;
 use App\Controller\AuthController;
 use App\Controller\CatalogueController;
+use App\Controller\CommandeController;
 use App\Controller\ProduitController;
 // use App\Controller\StatsController;
+use App\Model\CommandeModel;
 use App\Model\ProduitModel;
 use App\Model\UtilisateurModel;
 
@@ -65,6 +67,7 @@ try {
         CatalogueController::class => new CatalogueController(new ProduitModel($pdo)),
         ProduitController::class   => new ProduitController(new ProduitModel($pdo)),
         AuthController::class      => new AuthController(new UtilisateurModel($pdo)),
+        CommandeController::class  => new CommandeController(new CommandeModel($pdo), new ProduitModel($pdo)),
         // StatsController::class     => new StatsController(new FilmModel($pdo)),
     ];
 
