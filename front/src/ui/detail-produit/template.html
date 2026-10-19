@@ -1,0 +1,38 @@
+<article class="mx-auto max-w-6xl px-6 py-6 font-body text-text-primary">
+  <div class="grid gap-8 lg:grid-cols-3">
+    <div class="flex flex-col-reverse gap-3 lg:col-span-2 lg:flex-row">
+      <div class="flex gap-3 lg:flex-col">
+        <slot name="thumbnails"></slot>
+      </div>
+      <div class="aspect-square flex-1 overflow-hidden rounded-lg bg-surface-image">
+        <img src="{{mainImage}}" alt="{{titre}}" class="size-full object-cover">
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-5">
+      <div class="flex flex-col gap-1">
+        <h1 class="text-heading-lg font-bold">{{titre}}</h1>
+        <p class="text-body-sm text-text-secondary">{{subtitle}}</p>
+      </div>
+
+      <div class="flex flex-col gap-1 border-b border-border-default pb-5">
+        <p class="text-caption text-text-secondary">Prix</p>
+        <p class="text-heading-sm font-bold">{{prix}}</p>
+      </div>
+
+      <button type="button" data-action="addToCart" class="h-11 w-full rounded-full bg-action-primary-background text-body-sm font-semibold text-action-primary-foreground hover:bg-action-primary-hover">
+        Ajouter au panier
+      </button>
+
+      <a href="{{categoryLink}}" data-link class="flex h-11 w-full items-center justify-center rounded-full border border-border-active text-body-sm font-semibold text-action-secondary-foreground hover:bg-surface-hover">
+        Retour au catalogue
+      </a>
+    </div>
+  </div>
+
+  <section class="mt-14 border-t border-border-default pt-6">
+    <h2 class="inline-block border-b-2 border-border-active pb-1 text-body-sm font-semibold">Description</h2>
+    <p class="mt-5 max-w-xl text-body-sm text-text-secondary">{{description}}</p>
+    <p class="mt-4 max-w-xl text-body-sm text-text-secondary">Le prix de ce modèle est de {{prix}}. Vous pouvez ajouter le produit à votre panier ou revenir à la catégorie {{categorie}} pour comparer les autres modèles.</p>
+  </section>
+</article>

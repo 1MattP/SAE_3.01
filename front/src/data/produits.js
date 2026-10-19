@@ -16,4 +16,8 @@ ProduitData.fetchPage = async function (page, reglages) {
   return getRequest(uri);
 };
 
+ProduitData.fetchOne = async function (urlName) {
+  return getRequest(`produit?urlName=${urlName}`);
+};
+
 export { ProduitData };

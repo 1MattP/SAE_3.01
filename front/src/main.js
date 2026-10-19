@@ -1,6 +1,7 @@
 import { Router } from "./lib/router.js";
 import { RootLayout } from "./layouts/root/layout.js";
 import { CataloguePage } from "./pages/catalogue/page.js";
+import { ProduitPage } from "./pages/produit/page.js";
 // import { AdminPage } from "./pages/admin/page.js";
 import { The404Page } from "./pages/404/page.js";
 
@@ -10,6 +11,8 @@ const router = new Router("app", { base: import.meta.env.BASE_URL });
 router.addLayout("/", RootLayout);
 
 router.addRoute("/categorie/:nom", CataloguePage);
+
+router.addRoute("/produit/:urlName", ProduitPage);
 
 router.addRoute("/", CataloguePage);
 // router.addRoute("/admin", AdminPage);

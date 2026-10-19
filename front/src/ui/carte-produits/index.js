@@ -9,6 +9,7 @@ let CarteProduitView = {
 
     return genericRenderer(template, {
       titre: produit.titre,
+      lien: "/produit/" + produit.urlName,
       description: produit.description,
       prix: formaterPrix(produit.prix),
       image: formaterImage(produit.image),
@@ -18,7 +19,7 @@ let CarteProduitView = {
   dom: function (produit) {
     let fragment = htmlToFragment(CarteProduitView.html(produit));
 
-    let pastilles = produit.couleurs.split(",").map((couleur) => {
+    let pastilles = produit.couleurs.split(",").map(function (couleur) {
       return htmlToFragment(genericRenderer(templatePastille, { couleur: couleur.trim() }));
     });
     fragment.querySelector('slot[name="couleurs"]').replaceWith(...pastilles);
