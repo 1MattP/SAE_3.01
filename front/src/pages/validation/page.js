@@ -1,6 +1,7 @@
 import { AuthData } from "../../data/auth.js";
 import { CommandesData } from "../../data/commandes.js";
 import { PanierData } from "../../data/panier.js";
+import { StockData } from "../../data/stocks.js";
 import { htmlToFragment } from "../../lib/utils.js";
 import { CarteCommandeView } from "../../ui/carte-commande/index.js";
 import { LignesCommandeView } from "../../ui/lignes-commande/index.js";
@@ -16,10 +17,24 @@ let M = {
   message: null,
 };
 
+M.sync = async function () {
+  let result = await StockData.adjust(M.lines);
+
+  M.lines = result.lines;
+  PanierData.save(M.lines);
+
+  return result.messages;
+};
+
 M.load = async function () {
   let data = await AuthData.me();
   M.connectedEmail = data.email;
   M.lines = PanierData.load();
+
+  let messages = await M.sync();
+  if (messages.length > 0) {
+    M.message = { type: "erreur", texte: messages.join(" ") };
+  }
 };
 
 M.confirm = async function () {
@@ -27,7 +42,18 @@ M.confirm = async function () {
     return { urlName: line.urlName, quantity: line.quantity };
   });
 
-  let data = await CommandesData.create(items);
+  let data = null;
+
+  try {
+    data = await CommandesData.create(items);
+  } catch (erreur) {
+    if (erreur.statut === 409) {
+      let messages = await M.sync();
+      messages.unshift(erreur.message);
+      throw new Error(messages.join(" "));
+    }
+    throw erreur;
+  }
 
   M.order = data.commande;
   M.images = M.lines.map(function (line) {
@@ -101,7 +127,7 @@ C.init = async function () {
   try {
     await M.load();
   } catch (erreur) {
-    M.message = { type: "erreur", texte: `Impossible de vérifier votre session : ${erreur.message}` };
+    M.message = { type: "erreur", texte: `Impossible de vérifier votre session ou votre panier : ${erreur.message}` };
     return V.init(M.getPage());
   }
 

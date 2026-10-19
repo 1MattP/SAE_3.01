@@ -1,5 +1,6 @@
 import { ProduitData } from "../../data/produits.js";
 import { PanierData } from "../../data/panier.js";
+import { StockData } from "../../data/stocks.js";
 import { htmlToFragment } from "../../lib/utils.js";
 import { DetailProduitView } from "../../ui/detail-produit/index.js";
 import { MessageView } from "../../ui/message/index.js";
@@ -20,11 +21,28 @@ M.load = async function (urlName) {
   M.selectedImage = M.produit.images[0];
 };
 
-M.addToCart = function () {
+M.addToCart = async function () {
   let lines = PanierData.load();
   let line = lines.find(function (item) {
     return item.urlName === M.produit.urlName;
   });
+
+  let wanted = 1;
+  if (line !== undefined) {
+    wanted = line.quantity + 1;
+  }
+
+  let data = await StockData.verify([{ urlName: M.produit.urlName, quantity: wanted }]);
+  let result = data.lines[0];
+
+  if (result.quantity < wanted) {
+    let texte = `${M.produit.titre} est épuisé.`;
+    if (result.stock > 0) {
+      texte = `Stock insuffisant : il ne reste que ${result.stock} exemplaire(s) de ${M.produit.titre}.`;
+    }
+    M.message = { type: "erreur", texte: texte };
+    return;
+  }
 
   if (line === undefined) {
     lines.push({
@@ -33,9 +51,11 @@ M.addToCart = function () {
       prix: M.produit.prix,
       image: M.produit.images[0],
       quantity: 1,
+      stock: result.stock,
     });
   } else {
-    line.quantity += 1;
+    line.quantity = wanted;
+    line.stock = result.stock;
   }
 
   PanierData.save(lines);
@@ -77,8 +97,13 @@ C.handler_clickOnThumbnail = function (ev) {
   V.rafraichir(M.getPage());
 };
 
-C.handler_clickOnAddToCart = function (ev) {
-  M.addToCart();
+C.handler_clickOnAddToCart = async function (ev) {
+  try {
+    await M.addToCart();
+  } catch (erreur) {
+    M.message = { type: "erreur", texte: erreur.message };
+  }
+
   V.rafraichir(M.getPage());
 };
 

@@ -1,5 +1,7 @@
 import { PanierData } from "../../data/panier.js";
+import { StockData } from "../../data/stocks.js";
 import { htmlToFragment } from "../../lib/utils.js";
+import { MessageView } from "../../ui/message/index.js";
 import { PanierView } from "../../ui/panier/index.js";
 import { RecapitulatifView } from "../../ui/recapitulatif/index.js";
 import template from "./template.html?raw";
@@ -7,13 +9,26 @@ import template from "./template.html?raw";
 
 let M = {
   lines: [],
+  message: null,
 };
 
 M.load = function () {
   M.lines = PanierData.load();
 };
 
-M.changeQuantity = function (urlName, step) {
+M.sync = async function () {
+  let result = await StockData.adjust(M.lines);
+
+  M.lines = result.lines;
+  PanierData.save(M.lines);
+
+  M.message = null;
+  if (result.messages.length > 0) {
+    M.message = { type: "erreur", texte: result.messages.join(" ") };
+  }
+};
+
+M.changeQuantity = async function (urlName, step) {
   let line = M.lines.find(function (item) {
     return item.urlName === urlName;
   });
@@ -21,6 +36,7 @@ M.changeQuantity = function (urlName, step) {
   if (line.quantity + step > 0) {
     line.quantity += step;
     PanierData.save(M.lines);
+    await M.sync();
   }
 };
 
@@ -29,6 +45,7 @@ M.remove = function (urlName) {
     return item.urlName !== urlName;
   });
   PanierData.save(M.lines);
+  M.message = null;
 };
 
 M.getPage = function () {
@@ -43,23 +60,34 @@ M.getPage = function () {
       prix: line.prix,
       image: line.image,
       quantity: line.quantity,
+      canIncrease: line.quantity < line.stock,
       total: lineTotal,
     };
   });
 
-  return { lines: lines, subtotal: sum, shipping: 0, total: sum };
+  return { message: M.message, lines: lines, subtotal: sum, shipping: 0, total: sum };
 };
 
 
 let C = {};
 
-C.handler_clickOnPlus = function (ev) {
-  M.changeQuantity(ev.target.dataset.urlName, 1);
+C.handler_clickOnPlus = async function (ev) {
+  try {
+    await M.changeQuantity(ev.target.dataset.urlName, 1);
+  } catch (erreur) {
+    M.message = { type: "erreur", texte: erreur.message };
+  }
+
   V.rafraichir(M.getPage());
 };
 
-C.handler_clickOnMinus = function (ev) {
-  M.changeQuantity(ev.target.dataset.urlName, -1);
+C.handler_clickOnMinus = async function (ev) {
+  try {
+    await M.changeQuantity(ev.target.dataset.urlName, -1);
+  } catch (erreur) {
+    M.message = { type: "erreur", texte: erreur.message };
+  }
+
   V.rafraichir(M.getPage());
 };
 
@@ -72,8 +100,16 @@ C.handler_clickOnValidate = function (ev) {
   V.redirect("validation");
 };
 
-C.init = function () {
+C.init = async function () {
   M.load();
+  M.message = null;
+
+  try {
+    await M.sync();
+  } catch (erreur) {
+    M.message = { type: "erreur", texte: erreur.message };
+  }
+
   return V.init(M.getPage());
 };
 
@@ -101,6 +137,8 @@ V.redirect = function (path) {
 
 V.createPageFragment = function (data) {
   let pageFragment = htmlToFragment(template);
+
+  pageFragment.querySelector('slot[name="message"]').replaceWith(MessageView.dom(data.message));
 
   pageFragment.querySelector('slot[name="panier"]').replaceWith(
     PanierView.dom(data.lines, {

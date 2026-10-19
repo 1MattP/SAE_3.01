@@ -54,6 +54,18 @@ final class CommandeController
                 Response::erreur("Un produit de votre panier n'existe plus.", 400);
             }
 
+            $stock = (int) $produit['stock'];
+
+            if ($quantite > $stock) {
+                $message = $produit['titre'] . ' est épuisé.';
+
+                if ($stock > 0) {
+                    $message = 'Il ne reste que ' . $stock . ' exemplaire(s) de ' . $produit['titre'] . '.';
+                }
+
+                Response::erreur($message, 409);
+            }
+
             $prix   = (float) $produit['prix'];
             $somme += $prix * $quantite;
 

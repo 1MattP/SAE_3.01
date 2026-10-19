@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Controller\AuthController;
 use App\Controller\CatalogueController;
 use App\Controller\CommandeController;
+use App\Controller\PanierController;
 use App\Controller\ProduitController;
 // use App\Controller\StatsController;
 
@@ -27,5 +28,6 @@ return [
     'GET  /api/me'             => [AuthController::class,      'me'],
     'POST /api/commandes'      => [CommandeController::class,  'create'],
     'POST /api/commandes/annuler' => [CommandeController::class, 'cancel'],
+    'POST /api/panier/verifier' => [PanierController::class, 'verify'],
     // 'GET  /api/admin/stats' => [StatsController::class,     'index'],
 ];

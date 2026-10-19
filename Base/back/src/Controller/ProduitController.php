@@ -45,6 +45,7 @@ final class ProduitController
                 'prix'              => $produit['prix'],
                 'categorie'         => $produit['categorie'],
                 'etatStock'         => $produit['etatStock'],
+                'stock'             => (int) $produit['stock'],
                 'images'            => $this->produits->images($id),
             ],
         ]);
