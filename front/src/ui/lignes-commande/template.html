@@ -1,0 +1,20 @@
+<div class="mt-6 font-body text-text-primary">
+  <div>
+    <slot name="lines"></slot>
+  </div>
+
+  <div class="mt-6 flex flex-col gap-2 text-body-sm">
+    <div class="flex justify-between">
+      <p class="text-text-secondary">Sous-total</p>
+      <p class="text-text-secondary">{{subtotal}}</p>
+    </div>
+    <div class="flex justify-between">
+      <p class="text-text-secondary">Coût de livraison</p>
+      <p class="text-text-secondary">{{shipping}}</p>
+    </div>
+    <div class="flex justify-between border-t border-border-default pt-3 font-bold">
+      <p>Total</p>
+      <p>{{total}}</p>
+    </div>
+  </div>
+</div>

@@ -27,6 +27,8 @@ SET time_zone = "+00:00";
 -- L'import est rejouable : image_produit est supprimée en premier, puis
 -- produit, car leurs clés étrangères dépendent de produit puis de categorie.
 --
+DROP TABLE IF EXISTS `ligne_commande`;
+DROP TABLE IF EXISTS `commande`;
 DROP TABLE IF EXISTS `utilisateur`;
 DROP TABLE IF EXISTS `image_produit`;
 DROP TABLE IF EXISTS `produit`;
@@ -168,6 +170,50 @@ CREATE TABLE `utilisateur` (
   `date_creation` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_utilisateur_email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `commande`
+--
+-- numero vaut NULL le temps de l'insertion : il est calculé à partir de
+-- l'identifiant (CMD-000123), dans la même transaction.
+--
+
+CREATE TABLE `commande` (
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `numero` varchar(20) DEFAULT NULL,
+  `utilisateur_id` int(10) UNSIGNED NOT NULL,
+  `statut` varchar(20) NOT NULL DEFAULT 'en cours',
+  `total` decimal(9,2) NOT NULL,
+  `date_creation` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_commande_numero` (`numero`),
+  KEY `idx_commande_utilisateur` (`utilisateur_id`),
+  CONSTRAINT `fk_commande_utilisateur` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateur` (`id`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `ligne_commande`
+--
+-- titre et prix_unitaire sont figés au moment de la commande.
+--
+
+CREATE TABLE `ligne_commande` (
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `commande_id` int(10) UNSIGNED NOT NULL,
+  `produit_id` smallint(5) UNSIGNED NOT NULL,
+  `titre` varchar(160) NOT NULL,
+  `prix_unitaire` decimal(7,2) NOT NULL,
+  `quantite` smallint(5) UNSIGNED NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_ligne_commande_commande` (`commande_id`),
+  KEY `idx_ligne_commande_produit` (`produit_id`),
+  CONSTRAINT `fk_ligne_commande_commande` FOREIGN KEY (`commande_id`) REFERENCES `commande` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_ligne_commande_produit` FOREIGN KEY (`produit_id`) REFERENCES `produit` (`id`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 COMMIT;
 

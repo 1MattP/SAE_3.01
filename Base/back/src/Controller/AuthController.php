@@ -83,7 +83,7 @@ final class AuthController
     public function me(): void
     {
         Response::json([
-            'connecte' => isset($_SESSION['utilisateur']),
+            'connecte' => ($_SESSION['utilisateur'] ?? null) !== null,
             'email'    => $_SESSION['email'] ?? null,
         ]);
     }
