@@ -1,0 +1,25 @@
+<div class="mx-auto w-full max-w-sm font-body text-text-primary">
+  <div class="border-b border-border-default pb-6 text-center">
+    <h1 class="text-heading-lg font-bold">{{title}}</h1>
+    <p class="mt-2 text-caption text-text-secondary">{{subtitle}}</p>
+  </div>
+
+  <form novalidate class="mt-6 flex flex-col gap-5">
+    <label class="flex flex-col gap-2 text-caption font-semibold">
+      Email
+      <input name="email" type="email" autocomplete="email" placeholder="vous@exemple.fr" value="{{email}}" class="h-11 rounded-md border border-border-default bg-background-default px-3 text-body-sm font-normal hover:border-border-strong focus:border-border-active" />
+    </label>
+
+    <label class="flex flex-col gap-2 text-caption font-semibold">
+      Mot de passe
+      <input name="password" type="password" autocomplete="{{autocomplete}}" class="h-11 rounded-md border border-border-default bg-background-default px-3 text-body-sm font-normal hover:border-border-strong focus:border-border-active" />
+    </label>
+
+    <button type="submit" class="h-12 w-full bg-action-primary-background text-body-sm font-semibold text-action-primary-foreground hover:bg-action-primary-hover">{{button}}</button>
+  </form>
+
+  <p class="mt-6 text-center text-caption text-text-secondary">
+    {{linkText}}
+    <a href="{{link}}" data-link class="font-semibold text-text-primary underline">{{linkLabel}}</a>
+  </p>
+</div>

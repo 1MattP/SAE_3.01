@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-// use App\Controller\AuthController;
+use App\Controller\AuthController;
 use App\Controller\CatalogueController;
 use App\Controller\ProduitController;
 // use App\Controller\StatsController;
@@ -20,7 +20,9 @@ use App\Controller\ProduitController;
 return [
     'GET  /api/produits'       => [CatalogueController::class, 'index'],
     'GET  /api/produit'        => [ProduitController::class,   'show'],
-    // 'POST /api/login'       => [AuthController::class,      'login'],
-    // 'POST /api/logout'      => [AuthController::class,      'logout'],
+    'POST /api/register'       => [AuthController::class,      'register'],
+    'POST /api/login'          => [AuthController::class,      'login'],
+    'POST /api/logout'         => [AuthController::class,      'logout'],
+    'GET  /api/me'             => [AuthController::class,      'me'],
     // 'GET  /api/admin/stats' => [StatsController::class,     'index'],
 ];
