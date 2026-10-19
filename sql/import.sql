@@ -27,6 +27,7 @@ SET time_zone = "+00:00";
 -- L'import est rejouable : image_produit est supprimée en premier, puis
 -- produit, car leurs clés étrangères dépendent de produit puis de categorie.
 --
+DROP TABLE IF EXISTS `mouvement_stock`;
 DROP TABLE IF EXISTS `ligne_commande`;
 DROP TABLE IF EXISTS `commande`;
 DROP TABLE IF EXISTS `utilisateur`;
@@ -215,6 +216,29 @@ CREATE TABLE `ligne_commande` (
   KEY `idx_ligne_commande_produit` (`produit_id`),
   CONSTRAINT `fk_ligne_commande_commande` FOREIGN KEY (`commande_id`) REFERENCES `commande` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_ligne_commande_produit` FOREIGN KEY (`produit_id`) REFERENCES `produit` (`id`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `mouvement_stock`
+--
+-- Journal des variations de stock : quantite est négative pour une vente et
+-- positive pour une annulation. Les lignes ne sont jamais supprimées.
+--
+
+CREATE TABLE `mouvement_stock` (
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `produit_id` smallint(5) UNSIGNED NOT NULL,
+  `commande_id` int(10) UNSIGNED NOT NULL,
+  `type` varchar(20) NOT NULL,
+  `quantite` smallint(6) NOT NULL,
+  `date_creation` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_mouvement_stock_produit` (`produit_id`),
+  KEY `idx_mouvement_stock_commande` (`commande_id`),
+  CONSTRAINT `fk_mouvement_stock_produit` FOREIGN KEY (`produit_id`) REFERENCES `produit` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `fk_mouvement_stock_commande` FOREIGN KEY (`commande_id`) REFERENCES `commande` (`id`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 COMMIT;
 
