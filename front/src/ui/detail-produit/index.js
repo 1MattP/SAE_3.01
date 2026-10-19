@@ -16,11 +16,6 @@ let DetailProduitView = {
     });
   },
 
-  /**
-   * @param {{titre: string, subtitle: string, prix: string, categorie: string, description: string, mainImage: string,
-   *   images: string[]}} data
-   * @param {{thumbnail: Function, addToCart: Function}} actions
-   */
   dom: function (data, actions) {
     let fragment = htmlToFragment(DetailProduitView.html(data));
     let root = fragment.firstElementChild;

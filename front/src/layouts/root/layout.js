@@ -1,13 +1,22 @@
+import { PanierData } from "../../data/panier.js";
 import { htmlToFragment } from "../../lib/utils.js";
+import { HeaderView } from "../../ui/header/index.js";
 import template from "./template.html?raw";
 
 /**
- * Layout principal : la page affichée.
+ * Layout principal : l'en-tête, puis la page affichée.
  *
- * Le slot sans nom est laissé au routeur, qui y place la page.
  *
  * @returns {DocumentFragment}
  */
 export function RootLayout() {
-  return htmlToFragment(template);
+  let layout = htmlToFragment(template);
+
+  let count = 0;
+  for (let line of PanierData.load()) {
+    count += line.quantity;
+  }
+
+  layout.querySelector('slot[name="header"]').replaceWith(HeaderView.dom({ count: count }));
+  return layout;
 }
