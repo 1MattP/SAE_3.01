@@ -1,6 +1,9 @@
 <article class="relative flex flex-col items-start p-0 gap-0 flex-1">
-  <div class="flex h-55 p-0 flex-col justify-center items-center gap-0  overflow-hidden">
+  <div class="relative flex h-55 p-0 flex-col justify-center items-center gap-0  overflow-hidden">
     <img src="{{image}}" alt="{{titre}}" class="flex-1 self-stretch">
+    <div class="absolute top-3 left-3">
+      <slot name="stock"></slot>
+    </div>
   </div>
 
   <div class="flex flex-col items-start px-4 pt-4 pb-5 gap-3">

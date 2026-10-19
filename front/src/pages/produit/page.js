@@ -63,6 +63,7 @@ M.getPage = function () {
       categorie: M.produit.categorie,
       description: M.produit.descriptionLongue,
       mainImage: M.selectedImage,
+      etatStock: M.produit.etatStock,
       images: M.produit.images,
     },
   };
