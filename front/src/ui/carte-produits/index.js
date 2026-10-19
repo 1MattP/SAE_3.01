@@ -1,6 +1,7 @@
 import { genericRenderer, htmlToFragment } from "../../lib/utils.js";
 import { formaterPrix, formaterImage } from "../../lib/format.js";
 import template from "./template.html?raw";
+import { BadgeStockView } from "../badge-stock/index.js";
 import templatePastille from "./pastille.html?raw";
 
 
@@ -23,6 +24,7 @@ let CarteProduitView = {
       return htmlToFragment(genericRenderer(templatePastille, { couleur: couleur.trim() }));
     });
     fragment.querySelector('slot[name="couleurs"]').replaceWith(...pastilles);
+    fragment.querySelector('slot[name="stock"]').replaceWith(BadgeStockView.dom({ etat: produit.etatStock }));
 
     return fragment;
   },

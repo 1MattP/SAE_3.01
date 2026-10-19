@@ -1,5 +1,6 @@
 import { genericRenderer, htmlToFragment } from "../../lib/utils.js";
 import { formaterPrix, formaterImage } from "../../lib/format.js";
+import { BadgeStockView } from "../badge-stock/index.js";
 import template from "./template.html?raw";
 import templateMiniature from "./miniature.html?raw";
 
@@ -27,6 +28,9 @@ let DetailProduitView = {
       }));
     });
     fragment.querySelector('slot[name="thumbnails"]').replaceWith(...thumbnails);
+    fragment.querySelector('slot[name="stock"]').replaceWith(BadgeStockView.dom({ etat: data.etatStock }));
+
+    root.querySelector('[data-action="addToCart"]').disabled = data.etatStock === "epuise";
 
     root.addEventListener("click", function (ev) {
       let button = ev.target.closest("[data-action]");

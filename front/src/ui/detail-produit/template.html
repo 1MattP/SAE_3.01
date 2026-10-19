@@ -10,6 +10,8 @@
     </div>
 
     <div class="flex flex-col gap-5">
+      <slot name="stock"></slot>
+
       <div class="flex flex-col gap-1">
         <h1 class="text-heading-lg font-bold">{{titre}}</h1>
         <p class="text-body-sm text-text-secondary">{{subtitle}}</p>
@@ -20,7 +22,7 @@
         <p class="text-heading-sm font-bold">{{prix}}</p>
       </div>
 
-      <button type="button" data-action="addToCart" class="h-11 w-full rounded-full bg-action-primary-background text-body-sm font-semibold text-action-primary-foreground hover:bg-action-primary-hover">
+      <button type="button" data-action="addToCart" class="h-11 w-full rounded-full bg-action-primary-background text-body-sm font-semibold text-action-primary-foreground hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:bg-action-primary-hover">
         Ajouter au panier
       </button>
 
