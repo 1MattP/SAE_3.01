@@ -16,12 +16,13 @@ use App\Core\Database;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\Router;
+use App\Controller\AdminController;
 use App\Controller\AuthController;
 use App\Controller\CatalogueController;
 use App\Controller\CommandeController;
 use App\Controller\PanierController;
 use App\Controller\ProduitController;
-// use App\Controller\StatsController;
+use App\Controller\StatsController;
 use App\Model\CommandeModel;
 use App\Model\ProduitModel;
 use App\Model\UtilisateurModel;
@@ -72,7 +73,8 @@ try {
         AuthController::class      => new AuthController(new UtilisateurModel($pdo)),
         CommandeController::class  => new CommandeController(new CommandeModel($pdo), new ProduitModel($pdo, $seuilStock)),
         PanierController::class    => new PanierController(new ProduitModel($pdo, $seuilStock)),
-        // StatsController::class     => new StatsController(new FilmModel($pdo)),
+        AdminController::class     => new AdminController(new UtilisateurModel($pdo)),
+        StatsController::class     => new StatsController(new ProduitModel($pdo, $seuilStock), new CommandeModel($pdo)),
     ];
 
     $routes = require __DIR__ . '/src/routes.php';

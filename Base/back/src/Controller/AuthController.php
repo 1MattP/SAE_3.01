@@ -68,14 +68,10 @@ final class AuthController
 
     public function logout(): void
     {
-        $_SESSION = [];
+        $_SESSION['utilisateur'] = null;
+        $_SESSION['email']       = null;
 
-        setcookie(session_name(), '', [
-            'expires' => time() - 3600,
-            'path'    => session_get_cookie_params()['path'],
-        ]);
-
-        session_destroy();
+        session_regenerate_id(true);
 
         Response::json(['connecte' => false, 'email' => null]);
     }

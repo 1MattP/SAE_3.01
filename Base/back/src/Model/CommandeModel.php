@@ -16,6 +16,11 @@ final class CommandeModel
         $this->pdo = $pdo;
     }
 
+    public function compter(): int
+    {
+        return (int) $this->pdo->query('SELECT COUNT(*) FROM commande')->fetchColumn();
+    }
+
     public function creer(int $utilisateur, string $statut, float $total, array $lignes): ?string
     {
         $this->pdo->beginTransaction();
