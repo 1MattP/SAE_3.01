@@ -3,7 +3,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 // Chemin du projet sur le serveur, avec la barre finale. Il doit être
 // identique à « chemin » dans back/config/config.php.
-const BASE = "/~pages39/SAE301/Base/";
+const BASE = "/~pages39/SAE301/";
 
 // Serveur qui héberge l'API.
 const SERVEUR = "https://mmi.unilim.fr";

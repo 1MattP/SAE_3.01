@@ -12,68 +12,53 @@ let M = {
   message: null,
 };
 
-M.load = async function () {
-  let data = await AuthData.me();
-  M.connectedEmail = data.email;
-};
-
-M.getPage = function () {
-  return {
-    message: M.message,
-    connectedEmail: M.connectedEmail,
-    form: {
-      title: "Créer un compte",
-      subtitle: "Renseignez votre email et choisissez un mot de passe.",
-      email: M.email,
-      autocomplete: "new-password",
-      button: "Créer mon compte",
-      linkText: "Déjà un compte ?",
-      linkLabel: "Se connecter",
-      link: "/connexion",
-    },
-  };
-};
-
-
 let C = {};
 
-C.handler_submit = async function (email, password) {
+C.charger = async function () {
+  M.message = null;
+
+  try {
+    let data = await AuthData.me();
+    M.connectedEmail = data.email;
+  } catch (erreur) {
+    M.connectedEmail = null;
+    M.message = { type: "erreur", texte: `Impossible de vérifier votre session : ${erreur.message}` };
+  }
+};
+
+C.handler_creerCompte = async function (email, password) {
   M.email = email;
 
   try {
     await AuthData.register(email, password);
-    await M.load();
+
+    let data = await AuthData.me();
+    M.connectedEmail = data.email;
     M.message = { type: "succes", texte: "Compte créé. Vous êtes connecté." };
   } catch (erreur) {
     M.message = { type: "erreur", texte: erreur.message };
   }
 
-  V.rafraichir(M.getPage());
+  V.rafraichir();
 };
 
-C.handler_clickOnLogout = async function () {
+C.handler_deconnecter = async function () {
   try {
     await AuthData.logout();
-    await M.load();
+
+    let data = await AuthData.me();
+    M.connectedEmail = data.email;
     M.message = { type: "succes", texte: "Vous êtes déconnecté." };
   } catch (erreur) {
     M.message = { type: "erreur", texte: erreur.message };
   }
 
-  V.rafraichir(M.getPage());
+  V.rafraichir();
 };
 
 C.init = async function () {
-  M.message = null;
-
-  try {
-    await M.load();
-  } catch (erreur) {
-    M.connectedEmail = null;
-    M.message = { type: "erreur", texte: `Impossible de vérifier votre session : ${erreur.message}` };
-  }
-
-  return V.init(M.getPage());
+  await C.charger();
+  return V.init();
 };
 
 
@@ -81,33 +66,45 @@ let V = {};
 
 V.racine = null;
 
-V.init = function (data) {
-  let fragment = V.createPageFragment(data);
+V.init = function () {
+  let fragment = V.createPageFragment();
   V.racine = fragment.firstElementChild;
   return fragment;
 };
 
-V.rafraichir = function (data) {
-  let fragment = V.createPageFragment(data);
+V.rafraichir = function () {
+  let fragment = V.createPageFragment();
   let nouvelleRacine = fragment.firstElementChild;
   V.racine.replaceWith(fragment);
   V.racine = nouvelleRacine;
 };
 
-V.createPageFragment = function (data) {
+V.createPageFragment = function () {
   let pageFragment = htmlToFragment(template);
 
-  if (data.connectedEmail === null) {
+  if (M.connectedEmail === null) {
     pageFragment.querySelector('slot[name="formulaire"]').replaceWith(
-      FormulaireAuthView.dom(data.form, { submit: C.handler_submit })
+      FormulaireAuthView.dom(
+        {
+          title: "Créer un compte",
+          subtitle: "Renseignez votre email et choisissez un mot de passe.",
+          email: M.email,
+          autocomplete: "new-password",
+          button: "Créer mon compte",
+          linkText: "Déjà un compte ?",
+          linkLabel: "Se connecter",
+          link: "/connexion",
+        },
+        { submit: C.handler_creerCompte }
+      )
     );
   } else {
     pageFragment.querySelector('slot[name="formulaire"]').replaceWith(
-      CompteConnecteView.dom({ email: data.connectedEmail }, { logout: C.handler_clickOnLogout })
+      CompteConnecteView.dom({ email: M.connectedEmail }, { logout: C.handler_deconnecter })
     );
   }
 
-  pageFragment.querySelector('slot[name="message"]').replaceWith(MessageView.dom(data.message));
+  pageFragment.querySelector('slot[name="message"]').replaceWith(MessageView.dom(M.message));
 
   return pageFragment;
 };

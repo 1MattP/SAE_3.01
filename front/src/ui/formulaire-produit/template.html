@@ -1,0 +1,71 @@
+<div class="mt-6 max-w-2xl font-body text-text-primary">
+  <h2 class="text-heading-sm font-bold">{{title}}</h2>
+
+  <form novalidate class="mt-6 flex flex-col gap-5">
+    <label class="flex flex-col gap-2 text-caption font-semibold">
+      Titre
+      <input name="titre" type="text" value="{{titre}}" class="h-11 rounded-md border border-border-default bg-background-default px-3 text-body-sm font-normal hover:border-border-strong focus:border-border-active" />
+    </label>
+
+    <label class="flex flex-col gap-2 text-caption font-semibold">
+      Nom dans l'URL (lettres minuscules, chiffres et tirets)
+      <input name="urlName" type="text" value="{{urlName}}" class="h-11 rounded-md border border-border-default bg-background-default px-3 text-body-sm font-normal hover:border-border-strong focus:border-border-active" />
+    </label>
+
+    <label class="flex flex-col gap-2 text-caption font-semibold">
+      Description courte
+      <input name="description" type="text" value="{{description}}" class="h-11 rounded-md border border-border-default bg-background-default px-3 text-body-sm font-normal hover:border-border-strong focus:border-border-active" />
+    </label>
+
+    <label class="flex flex-col gap-2 text-caption font-semibold">
+      Description détaillée
+      <textarea name="descriptionLongue" rows="5" class="rounded-md border border-border-default bg-background-default px-3 py-2 text-body-sm font-normal hover:border-border-strong focus:border-border-active">{{descriptionLongue}}</textarea>
+    </label>
+
+    <div class="grid gap-5 sm:grid-cols-2">
+      <label class="flex flex-col gap-2 text-caption font-semibold">
+        Prix (€)
+        <input name="prix" type="text" inputmode="decimal" value="{{prix}}" class="h-11 rounded-md border border-border-default bg-background-default px-3 text-body-sm font-normal hover:border-border-strong focus:border-border-active" />
+      </label>
+
+      <label class="flex flex-col gap-2 text-caption font-semibold">
+        Stock
+        <input name="stock" type="text" inputmode="numeric" value="{{stock}}" class="h-11 rounded-md border border-border-default bg-background-default px-3 text-body-sm font-normal hover:border-border-strong focus:border-border-active" />
+      </label>
+    </div>
+
+    <label class="flex flex-col gap-2 text-caption font-semibold">
+      Catégorie
+      <select name="categorieId" class="h-11 rounded-md border border-border-default bg-background-default px-3 text-body-sm font-normal hover:border-border-strong focus:border-border-active">
+        <slot name="categories"></slot>
+      </select>
+    </label>
+
+    <label class="flex flex-col gap-2 text-caption font-semibold">
+      Couleurs (codes séparés par des virgules, par exemple #f4f4f5,#09090b)
+      <input name="couleurs" type="text" value="{{couleurs}}" class="h-11 rounded-md border border-border-default bg-background-default px-3 text-body-sm font-normal hover:border-border-strong focus:border-border-active" />
+    </label>
+
+    <label class="flex flex-col gap-2 text-caption font-semibold">
+      Image principale (nom du fichier, par exemple /images/dunk-low.avif)
+      <input name="image" type="text" value="{{image}}" class="h-11 rounded-md border border-border-default bg-background-default px-3 text-body-sm font-normal hover:border-border-strong focus:border-border-active" />
+    </label>
+
+    <label class="flex flex-col gap-2 text-caption font-semibold">
+      Image 2 de la galerie (facultatif, l'image principale est utilisée si vide)
+      <input name="image2" type="text" value="{{image2}}" class="h-11 rounded-md border border-border-default bg-background-default px-3 text-body-sm font-normal hover:border-border-strong focus:border-border-active" />
+    </label>
+
+    <label class="flex flex-col gap-2 text-caption font-semibold">
+      Image 3 de la galerie (facultatif, l'image principale est utilisée si vide)
+      <input name="image3" type="text" value="{{image3}}" class="h-11 rounded-md border border-border-default bg-background-default px-3 text-body-sm font-normal hover:border-border-strong focus:border-border-active" />
+    </label>
+
+    <label class="flex flex-col gap-2 text-caption font-semibold">
+      Image 4 de la galerie (facultatif, l'image principale est utilisée si vide)
+      <input name="image4" type="text" value="{{image4}}" class="h-11 rounded-md border border-border-default bg-background-default px-3 text-body-sm font-normal hover:border-border-strong focus:border-border-active" />
+    </label>
+
+    <button type="submit" class="h-12 w-full rounded-md bg-action-primary-background text-body-sm font-semibold text-action-primary-foreground hover:bg-action-primary-hover sm:w-60">{{button}}</button>
+  </form>
+</div>

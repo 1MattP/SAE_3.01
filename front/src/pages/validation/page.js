@@ -11,13 +11,20 @@ import template from "./template.html?raw";
 
 let M = {
   lines: [],
-  connectedEmail: null,
   images: [],
+  connectedEmail: null,
   order: null,
   message: null,
+  lignes: [],
+  sousTotal: 0,
+  total: 0,
+  numero: "",
+  bouton: "",
 };
 
-M.sync = async function () {
+let C = {};
+
+C.synchroniser = async function () {
   let result = await StockData.adjust(M.lines);
 
   M.lines = result.lines;
@@ -26,116 +33,109 @@ M.sync = async function () {
   return result.messages;
 };
 
-M.load = async function () {
-  let data = await AuthData.me();
-  M.connectedEmail = data.email;
-  M.lines = PanierData.load();
 
-  let messages = await M.sync();
-  if (messages.length > 0) {
-    M.message = { type: "erreur", texte: messages.join(" ") };
-  }
-};
-
-M.confirm = async function () {
-  let items = M.lines.map(function (line) {
-    return { urlName: line.urlName, quantity: line.quantity };
-  });
-
-  let data = null;
+C.charger = async function () {
+  M.order = null;
+  M.message = null;
+  M.connectedEmail = null;
 
   try {
-    data = await CommandesData.create(items);
-  } catch (erreur) {
-    if (erreur.statut === 409) {
-      let messages = await M.sync();
-      messages.unshift(erreur.message);
-      throw new Error(messages.join(" "));
+    let data = await AuthData.me();
+    M.connectedEmail = data.email;
+    M.lines = PanierData.load();
+
+    let messages = await C.synchroniser();
+    if (messages.length > 0) {
+      M.message = { type: "erreur", texte: messages.join(" ") };
     }
-    throw erreur;
+  } catch (erreur) {
+    M.message = { type: "erreur", texte: `Impossible de vérifier votre session ou votre panier : ${erreur.message}` };
+    C.preparer();
+    return false;
   }
 
-  M.order = data.commande;
-  M.images = M.lines.map(function (line) {
-    return line.image;
-  });
-  M.lines = [];
-  PanierData.save([]);
+  C.preparer();
+  return true;
 };
 
-M.getPage = function () {
+C.preparer = function () {
   if (M.order !== null) {
-    return {
-      message: null,
-      lines: M.order.lignes.map(function (line, index) {
-        return { titre: line.titre, image: M.images[index], prix: line.prix, quantity: line.quantite, total: line.total };
-      }),
-      subtotal: M.order.total,
-      shipping: 0,
-      total: M.order.total,
-      numero: M.order.numero,
-      button: "",
-    };
+    M.lignes = M.order.lignes.map(function (line, index) {
+      return { titre: line.titre, image: M.images[index], prix: line.prix, quantity: line.quantite, total: line.total };
+    });
+    M.sousTotal = M.order.total;
+    M.total = M.order.total;
+    M.numero = M.order.numero;
+    M.bouton = "";
+    return;
   }
 
   let sum = 0;
-  let lines = M.lines.map(function (line) {
+  M.lignes = M.lines.map(function (line) {
     let lineTotal = line.prix * line.quantity;
     sum += lineTotal;
     return { titre: line.titre, image: line.image, prix: line.prix, quantity: line.quantity, total: lineTotal };
   });
+  M.sousTotal = sum;
+  M.total = sum;
+  M.numero = "";
 
-  let message = M.message;
-  if (message === null && lines.length === 0) {
-    message = { type: "erreur", texte: "Votre panier est vide." };
+  M.bouton = "";
+  if (M.connectedEmail !== null && M.lignes.length > 0) {
+    M.bouton = "Confirmer ma commande";
   }
 
-  let button = "";
-  if (M.connectedEmail !== null && lines.length > 0) {
-    button = "Confirmer ma commande";
+  if (M.message === null && M.lignes.length === 0) {
+    M.message = { type: "erreur", texte: "Votre panier est vide." };
   }
-
-  return {
-    message: message,
-    lines: lines,
-    subtotal: sum,
-    shipping: 0,
-    total: sum,
-    numero: "",
-    button: button,
-  };
 };
 
 
-let C = {};
-
-C.handler_clickOnConfirm = async function () {
+C.expliquerRefus = async function (texte) {
   try {
-    await M.confirm();
+    let messages = await C.synchroniser();
+    messages.unshift(texte);
+    return messages.join(" ");
+  } catch (erreur) {
+    return texte;
+  }
+};
+
+C.handler_confirmerCommande = async function () {
+  let items = M.lines.map(function (line) {
+    return { urlName: line.urlName, quantity: line.quantity };
+  });
+
+  try {
+    let data = await CommandesData.create(items);
+
+    M.order = data.commande;
+    M.images = M.lines.map(function (line) {
+      return line.image;
+    });
+    M.lines = [];
+    PanierData.save([]);
     M.message = null;
   } catch (erreur) {
     M.message = { type: "erreur", texte: erreur.message };
+
+    if (erreur.statut === 409) {
+      M.message.texte = await C.expliquerRefus(erreur.message);
+    }
   }
 
-  V.rafraichir(M.getPage());
+  C.preparer();
+  V.rafraichir();
 };
 
 C.init = async function () {
-  M.order = null;
-  M.message = null;
+  let verifie = await C.charger();
 
-  try {
-    await M.load();
-  } catch (erreur) {
-    M.message = { type: "erreur", texte: `Impossible de vérifier votre session ou votre panier : ${erreur.message}` };
-    return V.init(M.getPage());
-  }
-
-  if (M.connectedEmail === null) {
+  if (verifie && M.connectedEmail === null) {
     V.redirect("connexion");
   }
 
-  return V.init(M.getPage());
+  return V.init();
 };
 
 
@@ -143,14 +143,14 @@ let V = {};
 
 V.racine = null;
 
-V.init = function (data) {
-  let fragment = V.createPageFragment(data);
+V.init = function () {
+  let fragment = V.createPageFragment();
   V.racine = fragment.firstElementChild;
   return fragment;
 };
 
-V.rafraichir = function (data) {
-  let fragment = V.createPageFragment(data);
+V.rafraichir = function () {
+  let fragment = V.createPageFragment();
   let nouvelleRacine = fragment.firstElementChild;
   V.racine.replaceWith(fragment);
   V.racine = nouvelleRacine;
@@ -160,20 +160,29 @@ V.redirect = function (path) {
   window.location.assign(import.meta.env.BASE_URL + path);
 };
 
-V.createPageFragment = function (data) {
+V.createPageFragment = function () {
   let pageFragment = htmlToFragment(template);
 
-  pageFragment.querySelector('slot[name="message"]').replaceWith(MessageView.dom(data.message));
+  pageFragment.querySelector('slot[name="message"]').replaceWith(MessageView.dom(M.message));
 
-  if (data.lines.length === 0) {
+  if (M.lignes.length === 0) {
     pageFragment.querySelector('slot[name="lignes"]').remove();
     pageFragment.querySelector('slot[name="carte"]').remove();
     return pageFragment;
   }
 
+  let data = {
+    lines: M.lignes,
+    subtotal: M.sousTotal,
+    shipping: 0,
+    total: M.total,
+    numero: M.numero,
+    button: M.bouton,
+  };
+
   pageFragment.querySelector('slot[name="lignes"]').replaceWith(LignesCommandeView.dom(data));
   pageFragment.querySelector('slot[name="carte"]').replaceWith(
-    CarteCommandeView.dom(data, { confirm: C.handler_clickOnConfirm })
+    CarteCommandeView.dom(data, { confirm: C.handler_confirmerCommande })
   );
 
   return pageFragment;
