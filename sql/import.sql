@@ -169,6 +169,7 @@ CREATE TABLE `utilisateur` (
   `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   `email` varchar(190) NOT NULL,
   `mot_de_passe` varchar(255) NOT NULL,
+  `role` varchar(10) NOT NULL DEFAULT 'user',
   `date_creation` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_utilisateur_email` (`email`)
@@ -240,6 +241,17 @@ CREATE TABLE `mouvement_stock` (
   CONSTRAINT `fk_mouvement_stock_produit` FOREIGN KEY (`produit_id`) REFERENCES `produit` (`id`) ON UPDATE CASCADE,
   CONSTRAINT `fk_mouvement_stock_commande` FOREIGN KEY (`commande_id`) REFERENCES `commande` (`id`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Compte administrateur de test : admin@nike.fr (mot de passe de test indiqué
+-- hors du dépôt). Pour promouvoir un compte existant :
+-- UPDATE `utilisateur` SET `role` = 'admin' WHERE `email` = '...';
+--
+
+INSERT INTO `utilisateur` (`email`, `mot_de_passe`, `role`) VALUES
+('admin@nike.fr', '$2y$12$vdHwz7xSwS5jZArd0ZyaLOeby/0Ba/GC4lNWzyrj/2dWL1AnBc5ju', 'admin');
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

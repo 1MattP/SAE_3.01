@@ -18,7 +18,7 @@ final class UtilisateurModel
 
     public function trouverParEmail(string $email): ?array
     {
-        $sql = 'SELECT id, email, mot_de_passe
+        $sql = 'SELECT id, email, mot_de_passe, role
                   FROM utilisateur
                  WHERE email = :email';
 
