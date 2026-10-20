@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Controller\AdminCategorieController;
 use App\Controller\AdminController;
 use App\Controller\AdminProduitController;
 use App\Controller\AuthController;
@@ -40,4 +41,9 @@ return [
     'POST /api/admin/produits' => [AdminProduitController::class, 'create'],
     'POST /api/admin/produits/modifier'  => [AdminProduitController::class, 'update'],
     'POST /api/admin/produits/supprimer' => [AdminProduitController::class, 'remove'],
+    'GET  /api/admin/categories' => [AdminCategorieController::class, 'index'],
+    'GET  /api/admin/categorie'  => [AdminCategorieController::class, 'show'],
+    'POST /api/admin/categories' => [AdminCategorieController::class, 'create'],
+    'POST /api/admin/categories/modifier'  => [AdminCategorieController::class, 'update'],
+    'POST /api/admin/categories/supprimer' => [AdminCategorieController::class, 'remove'],
 ];
