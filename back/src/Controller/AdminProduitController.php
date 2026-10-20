@@ -98,6 +98,7 @@ final class AdminProduitController
         $descriptionLongue = trim((string) ($corps['descriptionLongue'] ?? ''));
         $couleurs          = trim((string) ($corps['couleurs'] ?? ''));
         $image             = trim((string) ($corps['image'] ?? ''));
+        $extras            = $corps['images'] ?? [];
         $prix              = (float) str_replace(',', '.', (string) ($corps['prix'] ?? '0'));
         $stock             = (int) ($corps['stock'] ?? 0);
         $categorieId       = (int) ($corps['categorieId'] ?? 0);
@@ -134,6 +135,22 @@ final class AdminProduitController
             Response::erreur("L'image est obligatoire (255 caractères maximum).", 400);
         }
 
+        $images = [];
+
+        for ($i = 0; $i < 3; $i++) {
+            $url = '';
+
+            if (is_array($extras) && isset($extras[$i])) {
+                $url = trim((string) $extras[$i]);
+            }
+
+            if (strlen($url) > 255) {
+                Response::erreur('Chaque image fait 255 caractères maximum.', 400);
+            }
+
+            $images[] = $url;
+        }
+
         $categories = $this->produits->categories();
         $existe     = false;
 
@@ -159,6 +176,7 @@ final class AdminProduitController
             'prix'              => round($prix, 2),
             'couleurs'          => $couleurs,
             'image'             => $image,
+            'images'            => $images,
             'stock'             => $stock,
             'categorieId'       => $categorieId,
         ];

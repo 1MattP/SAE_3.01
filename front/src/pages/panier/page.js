@@ -9,108 +9,109 @@ import template from "./template.html?raw";
 
 let M = {
   lines: [],
+  subtotal: 0,
+  shipping: 0,
+  total: 0,
   message: null,
 };
 
-M.load = function () {
+let C = {};
+
+C.charger = function () {
   M.lines = PanierData.load();
 };
 
-M.sync = async function () {
-  let result = await StockData.adjust(M.lines);
-
-  M.lines = result.lines;
-  PanierData.save(M.lines);
-
-  M.message = null;
-  if (result.messages.length > 0) {
-    M.message = { type: "erreur", texte: result.messages.join(" ") };
-  }
-};
-
-M.changeQuantity = async function (urlName, step) {
-  let line = M.lines.find(function (item) {
-    return item.urlName === urlName;
-  });
-
-  if (line.quantity + step > 0) {
-    line.quantity += step;
-    PanierData.save(M.lines);
-    await M.sync();
-  }
-};
-
-M.remove = function (urlName) {
-  M.lines = M.lines.filter(function (item) {
-    return item.urlName !== urlName;
-  });
-  PanierData.save(M.lines);
-  M.message = null;
-};
-
-M.getPage = function () {
-  let sum = 0;
-
-  let lines = M.lines.map(function (line) {
-    let lineTotal = line.prix * line.quantity;
-    sum += lineTotal;
+C.enregistrer = function () {
+  PanierData.save(M.lines.map(function (line) {
     return {
       urlName: line.urlName,
       titre: line.titre,
       prix: line.prix,
       image: line.image,
       quantity: line.quantity,
-      canIncrease: line.quantity < line.stock,
-      total: lineTotal,
+      stock: line.stock,
     };
+  }));
+};
+
+C.calculer = function () {
+  let sum = 0;
+
+  for (let line of M.lines) {
+    line.total = line.prix * line.quantity;
+    line.canIncrease = line.quantity < line.stock;
+    sum += line.total;
+  }
+
+  M.subtotal = sum;
+  M.total = sum;
+};
+
+C.synchroniser = async function () {
+  M.message = null;
+
+  try {
+    let result = await StockData.adjust(M.lines);
+
+    M.lines = result.lines;
+    C.enregistrer();
+
+    if (result.messages.length > 0) {
+      M.message = { type: "erreur", texte: result.messages.join(" ") };
+    }
+  } catch (erreur) {
+    M.message = { type: "erreur", texte: erreur.message };
+  }
+
+  C.calculer();
+};
+
+C.handler_augmenterQuantite = async function (ev) {
+  let line = M.lines.find(function (item) {
+    return item.urlName === ev.target.dataset.urlName;
   });
 
-  return { message: M.message, lines: lines, subtotal: sum, shipping: 0, total: sum };
+  line.quantity += 1;
+  C.enregistrer();
+
+  await C.synchroniser();
+  V.rafraichir();
 };
 
+C.handler_diminuerQuantite = function (ev) {
+  let line = M.lines.find(function (item) {
+    return item.urlName === ev.target.dataset.urlName;
+  });
 
-let C = {};
-
-C.handler_clickOnPlus = async function (ev) {
-  try {
-    await M.changeQuantity(ev.target.dataset.urlName, 1);
-  } catch (erreur) {
-    M.message = { type: "erreur", texte: erreur.message };
+  if (line.quantity > 1) {
+    line.quantity -= 1;
   }
 
-  V.rafraichir(M.getPage());
+  M.message = null;
+  C.enregistrer();
+  C.calculer();
+  V.rafraichir();
 };
 
-C.handler_clickOnMinus = async function (ev) {
-  try {
-    await M.changeQuantity(ev.target.dataset.urlName, -1);
-  } catch (erreur) {
-    M.message = { type: "erreur", texte: erreur.message };
-  }
+C.handler_supprimerLigne = function (ev) {
+  M.lines = M.lines.filter(function (item) {
+    return item.urlName !== ev.target.dataset.urlName;
+  });
 
-  V.rafraichir(M.getPage());
+  M.message = null;
+  C.enregistrer();
+  C.calculer();
+  V.rafraichir();
 };
 
-C.handler_clickOnDelete = function (ev) {
-  M.remove(ev.target.dataset.urlName);
-  V.rafraichir(M.getPage());
-};
-
-C.handler_clickOnValidate = function (ev) {
+C.handler_validerPanier = function () {
   V.redirect("validation");
 };
 
 C.init = async function () {
-  M.load();
-  M.message = null;
-
-  try {
-    await M.sync();
-  } catch (erreur) {
-    M.message = { type: "erreur", texte: erreur.message };
-  }
-
-  return V.init(M.getPage());
+  C.charger();
+  await C.synchroniser();
+  return V.init();
 };
 
 
@@ -118,14 +119,14 @@ let V = {};
 
 V.racine = null;
 
-V.init = function (data) {
-  let fragment = V.createPageFragment(data);
+V.init = function () {
+  let fragment = V.createPageFragment();
   V.racine = fragment.firstElementChild;
   return fragment;
 };
 
-V.rafraichir = function (data) {
-  let fragment = V.createPageFragment(data);
+V.rafraichir = function () {
+  let fragment = V.createPageFragment();
   let nouvelleRacine = fragment.firstElementChild;
   V.racine.replaceWith(fragment);
   V.racine = nouvelleRacine;
@@ -135,21 +136,24 @@ V.redirect = function (path) {
   window.location.assign(import.meta.env.BASE_URL + path);
 };
 
-V.createPageFragment = function (data) {
+V.createPageFragment = function () {
   let pageFragment = htmlToFragment(template);
 
-  pageFragment.querySelector('slot[name="message"]').replaceWith(MessageView.dom(data.message));
+  pageFragment.querySelector('slot[name="message"]').replaceWith(MessageView.dom(M.message));
 
   pageFragment.querySelector('slot[name="panier"]').replaceWith(
-    PanierView.dom(data.lines, {
-      plus: C.handler_clickOnPlus,
-      minus: C.handler_clickOnMinus,
-      delete: C.handler_clickOnDelete,
+    PanierView.dom(M.lines, {
+      plus: C.handler_augmenterQuantite,
+      minus: C.handler_diminuerQuantite,
+      delete: C.handler_supprimerLigne,
     })
   );
 
   pageFragment.querySelector('slot[name="recapitulatif"]').replaceWith(
-    RecapitulatifView.dom(data, { validate: C.handler_clickOnValidate })
+    RecapitulatifView.dom(
+      { subtotal: M.subtotal, shipping: M.shipping, total: M.total },
+      { validate: C.handler_validerPanier }
+    )
   );
 
   return pageFragment;

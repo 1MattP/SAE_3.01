@@ -149,7 +149,14 @@ final class ProduitModel
 
         $ligne = $requetePreparee->fetch();
 
-        return $ligne === false ? null : $ligne;
+        if ($ligne === false) {
+            return null;
+        }
+
+        $images          = $this->images($id);
+        $ligne['images'] = array_slice($images, 1);
+
+        return $ligne;
     }
 
     public function nomUrlPris(string $urlName, int $sauf): bool
@@ -177,7 +184,7 @@ final class ProduitModel
 
         $id = (int) $this->pdo->lastInsertId();
 
-        $this->enregistrerImage($id, $produit['image']);
+        $this->enregistrerImages($id, $produit['image'], $produit['images']);
 
         $this->pdo->commit();
 
@@ -205,7 +212,7 @@ final class ProduitModel
         $requetePreparee->bindValue(':id', $id, PDO::PARAM_INT);
         $requetePreparee->execute();
 
-        $this->enregistrerImage($id, $produit['image']);
+        $this->enregistrerImages($id, $produit['image'], $produit['images']);
 
         $this->pdo->commit();
     }
@@ -232,16 +239,26 @@ final class ProduitModel
         $requetePreparee->bindValue(':categorie',         $produit['categorieId'],       PDO::PARAM_INT);
     }
 
-    private function enregistrerImage(int $id, string $image): void
+    private function enregistrerImages(int $id, string $image, array $images): void
     {
         $sql = 'INSERT INTO image_produit (produit_id, url, position)
-                VALUES (:produit, :url, 1)
+                VALUES (:produit, :url, :position)
                 ON DUPLICATE KEY UPDATE url = VALUES(url)';
 
         $requetePreparee = $this->pdo->prepare($sql);
-        $requetePreparee->bindValue(':produit', $id,    PDO::PARAM_INT);
-        $requetePreparee->bindValue(':url',     $image, PDO::PARAM_STR);
-        $requetePreparee->execute();
+
+        for ($position = 1; $position <= 4; $position++) {
+            $url = $image;
+
+            if ($position > 1 && $images[$position - 2] !== '') {
+                $url = $images[$position - 2];
+            }
+
+            $requetePreparee->bindValue(':produit',  $id,       PDO::PARAM_INT);
+            $requetePreparee->bindValue(':url',      $url,      PDO::PARAM_STR);
+            $requetePreparee->bindValue(':position', $position, PDO::PARAM_INT);
+            $requetePreparee->execute();
+        }
     }
 
     public function categories(): array

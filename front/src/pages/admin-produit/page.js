@@ -17,8 +17,11 @@ let M = {
   message: null,
 };
 
-M.load = async function (id) {
+let C = {};
+
+C.charger = async function (id) {
   M.id = id;
+  M.stats = null;
 
   let data = await AdminData.me();
   M.adminEmail = data.email;
@@ -37,6 +40,7 @@ M.load = async function (id) {
       stock: "0",
       couleurs: "",
       image: "",
+      images: ["", "", ""],
       categorieId: M.categories[0].id,
     };
 
@@ -46,58 +50,34 @@ M.load = async function (id) {
   }
 };
 
-M.save = async function (values) {
+C.handler_enregistrerProduit = async function (values) {
+  let creation = M.id === 0;
   M.values = values;
 
-  if (M.id === 0) {
-    let result = await AdminProduitData.create(values);
-    M.id = result.produit.id;
-  } else {
-    values.id = M.id;
-    await AdminProduitData.update(values);
-  }
-
-  M.stats = await StatsData.fetch();
-};
-
-M.getPage = function () {
-  let title = "Ajouter un produit";
-  let button = "Ajouter le produit";
-
-  if (M.id !== 0) {
-    title = "Modifier le produit";
-    button = "Enregistrer les modifications";
-  }
-
-  return {
-    message: M.message,
-    stats: M.stats,
-    form: { title: title, button: button, values: M.values, categories: M.categories },
-  };
-};
-
-
-let C = {};
-
-C.handler_submit = async function (values) {
-  let creation = M.id === 0;
-
   try {
-    await M.save(values);
+    if (creation) {
+      let result = await AdminProduitData.create(values);
+      M.id = result.produit.id;
+    } else {
+      values.id = M.id;
+      await AdminProduitData.update(values);
+    }
+
+    M.stats = await StatsData.fetch();
     M.message = { type: "succes", texte: creation ? "Produit ajouté." : "Produit modifié." };
   } catch (erreur) {
     M.message = { type: "erreur", texte: erreur.message };
   }
 
-  V.rafraichir(M.getPage());
+  V.rafraichir();
 };
 
-C.handler_clickOnLogout = async function () {
+C.handler_deconnecter = async function () {
   try {
     await AdminData.logout();
   } catch (erreur) {
     M.message = { type: "erreur", texte: erreur.message };
-    V.rafraichir(M.getPage());
+    V.rafraichir();
     return;
   }
 
@@ -108,19 +88,18 @@ C.init = async function (id) {
   M.message = null;
 
   try {
-    await M.load(id);
+    await C.charger(id);
   } catch (erreur) {
-    M.adminEmail = null;
     M.stats = null;
     M.message = { type: "erreur", texte: erreur.message };
-    return V.init(M.getPage());
+    return V.init();
   }
 
   if (M.adminEmail === null) {
     V.redirect("admin");
   }
 
-  return V.init(M.getPage());
+  return V.init();
 };
 
 
@@ -128,14 +107,14 @@ let V = {};
 
 V.racine = null;
 
-V.init = function (data) {
-  let fragment = V.createPageFragment(data);
+V.init = function () {
+  let fragment = V.createPageFragment();
   V.racine = fragment.firstElementChild;
   return fragment;
 };
 
-V.rafraichir = function (data) {
-  let fragment = V.createPageFragment(data);
+V.rafraichir = function () {
+  let fragment = V.createPageFragment();
   let nouvelleRacine = fragment.firstElementChild;
   V.racine.replaceWith(fragment);
   V.racine = nouvelleRacine;
@@ -145,22 +124,33 @@ V.redirect = function (path) {
   window.location.assign(import.meta.env.BASE_URL + path);
 };
 
-V.createPageFragment = function (data) {
+V.createPageFragment = function () {
   let pageFragment = htmlToFragment(template);
 
-  pageFragment.querySelector('slot[name="message"]').replaceWith(MessageView.dom(data.message));
+  pageFragment.querySelector('slot[name="message"]').replaceWith(MessageView.dom(M.message));
 
-  if (data.stats === null) {
+  if (M.stats === null) {
     pageFragment.querySelector('slot[name="nav"]').remove();
     pageFragment.querySelector('slot[name="formulaire"]').remove();
     return pageFragment;
   }
 
+  let title = "Ajouter un produit";
+  let button = "Ajouter le produit";
+
+  if (M.id !== 0) {
+    title = "Modifier le produit";
+    button = "Enregistrer les modifications";
+  }
+
   pageFragment.querySelector('slot[name="nav"]').replaceWith(
-    AdminNavView.dom(data.stats, { logout: C.handler_clickOnLogout })
+    AdminNavView.dom(M.stats, { logout: C.handler_deconnecter })
   );
   pageFragment.querySelector('slot[name="formulaire"]').replaceWith(
-    FormulaireProduitView.dom(data.form, { submit: C.handler_submit })
+    FormulaireProduitView.dom(
+      { title: title, button: button, values: M.values, categories: M.categories },
+      { submit: C.handler_enregistrerProduit }
+    )
   );
 
   return pageFragment;

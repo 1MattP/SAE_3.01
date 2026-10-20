@@ -14,74 +14,56 @@ let M = {
   message: null,
 };
 
-M.load = async function () {
+let C = {};
+
+C.charger = async function () {
+  M.stats = null;
+
   let data = await AdminData.me();
   M.adminEmail = data.email;
-  M.stats = null;
 
   if (M.adminEmail !== null) {
     M.stats = await StatsData.fetch();
   }
 };
 
-M.getPage = function () {
-  return {
-    message: M.message,
-    connected: M.adminEmail !== null,
-    stats: M.stats,
-    form: {
-      title: "Administration",
-      subtitle: "Connectez-vous à l'espace d'administration.",
-      email: M.email,
-      autocomplete: "current-password",
-      button: "Se connecter",
-      linkText: "Espace réservé aux administrateurs.",
-      linkLabel: "Retour au site",
-      link: "/",
-    },
-  };
-};
-
-
-let C = {};
-
-C.handler_submit = async function (email, password) {
+C.handler_connecterAdmin = async function (email, password) {
   M.email = email;
 
   try {
     await AdminData.login(email, password);
-    await M.load();
+    await C.charger();
     M.message = null;
   } catch (erreur) {
     M.message = { type: "erreur", texte: erreur.message };
   }
 
-  V.rafraichir(M.getPage());
+  V.rafraichir();
 };
 
-C.handler_clickOnLogout = async function () {
+C.handler_deconnecter = async function () {
   try {
     await AdminData.logout();
-    await M.load();
+    await C.charger();
     M.message = { type: "succes", texte: "Vous êtes déconnecté." };
   } catch (erreur) {
     M.message = { type: "erreur", texte: erreur.message };
   }
 
-  V.rafraichir(M.getPage());
+  V.rafraichir();
 };
 
 C.init = async function () {
   M.message = null;
 
   try {
-    await M.load();
+    await C.charger();
   } catch (erreur) {
     M.adminEmail = null;
     M.message = { type: "erreur", texte: erreur.message };
   }
 
-  return V.init(M.getPage());
+  return V.init();
 };
 
 
@@ -89,36 +71,48 @@ let V = {};
 
 V.racine = null;
 
-V.init = function (data) {
-  let fragment = V.createPageFragment(data);
+V.init = function () {
+  let fragment = V.createPageFragment();
   V.racine = fragment.firstElementChild;
   return fragment;
 };
 
-V.rafraichir = function (data) {
-  let fragment = V.createPageFragment(data);
+V.rafraichir = function () {
+  let fragment = V.createPageFragment();
   let nouvelleRacine = fragment.firstElementChild;
   V.racine.replaceWith(fragment);
   V.racine = nouvelleRacine;
 };
 
-V.createPageFragment = function (data) {
+V.createPageFragment = function () {
   let pageFragment = htmlToFragment(template);
 
-  pageFragment.querySelector('slot[name="message"]').replaceWith(MessageView.dom(data.message));
+  pageFragment.querySelector('slot[name="message"]').replaceWith(MessageView.dom(M.message));
 
-  if (!data.connected) {
+  if (M.adminEmail === null) {
     pageFragment.querySelector('slot[name="nav"]').remove();
     pageFragment.querySelector('[data-welcome]').remove();
     pageFragment.querySelector('slot[name="formulaire"]').replaceWith(
-      FormulaireAuthView.dom(data.form, { submit: C.handler_submit })
+      FormulaireAuthView.dom(
+        {
+          title: "Administration",
+          subtitle: "Connectez-vous à l'espace d'administration.",
+          email: M.email,
+          autocomplete: "current-password",
+          button: "Se connecter",
+          linkText: "Espace réservé aux administrateurs.",
+          linkLabel: "Retour au site",
+          link: "/",
+        },
+        { submit: C.handler_connecterAdmin }
+      )
     );
     return pageFragment;
   }
 
   pageFragment.querySelector('slot[name="formulaire"]').remove();
   pageFragment.querySelector('slot[name="nav"]').replaceWith(
-    AdminNavView.dom(data.stats, { logout: C.handler_clickOnLogout })
+    AdminNavView.dom(M.stats, { logout: C.handler_deconnecter })
   );
 
   return pageFragment;

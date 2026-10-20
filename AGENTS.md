@@ -409,6 +409,8 @@ ailleurs.
 
 ## 6. Installation, développement et vérifications
 
+Toujours demander la permission avant de faire une commande
+
 ### Installation
 
 ``` bash
@@ -426,7 +428,7 @@ npm run dev
 Adresse de développement :
 
 ``` text
-https://mmi.unilim.fr/~pages39/SAE301/Base/
+https://mmi.unilim.fr/~pages39/SAE301/
 ```
 
 Le proxy Vite relaie `/api` vers `mmi.unilim.fr`. Le back-end doit donc
@@ -451,10 +453,6 @@ Pour chaque fichier PHP modifié, lancer `php -l`. Exemple :
 php -l back/src/Controller/CatalogueController.php
 ```
 
-### Déploiement
-
-1.  Exécuter `npm run build`.
-2.  Déposer `.htaccess`, `back/` et `front/dist/` dans `Base/`.
 
 ------------------------------------------------------------------------
 
