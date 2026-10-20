@@ -42,14 +42,15 @@ DROP TABLE IF EXISTS `categorie`;
 CREATE TABLE `categorie` (
   `id` tinyint(3) UNSIGNED NOT NULL AUTO_INCREMENT,
   `libelle` varchar(40) NOT NULL,
+  `description` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_categorie_libelle` (`libelle`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `categorie` (`id`, `libelle`) VALUES
-(1, 'Chaussures'),
-(2, 'Vêtements'),
-(3, 'Accessoires');
+INSERT INTO `categorie` (`id`, `libelle`, `description`) VALUES
+(1, 'Chaussures', 'Baskets de ville, de running et de basketball.'),
+(2, 'Vêtements', 'Vestes, pantalons et tenues pour l\'entraînement comme pour la ville.'),
+(3, 'Accessoires', 'Casquettes, bonnets, chaussettes, gourdes et sacs.');
 
 -- --------------------------------------------------------
 

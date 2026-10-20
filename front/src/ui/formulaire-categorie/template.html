@@ -1,0 +1,17 @@
+<div class="mt-6 max-w-2xl font-body text-text-primary">
+  <h2 class="text-heading-sm font-bold">{{title}}</h2>
+
+  <form novalidate class="mt-6 flex flex-col gap-5">
+    <label class="flex flex-col gap-2 text-caption font-semibold">
+      Nom
+      <input name="libelle" type="text" value="{{libelle}}" class="h-11 rounded-md border border-border-default bg-background-default px-3 text-body-sm font-normal hover:border-border-strong focus:border-border-active" />
+    </label>
+
+    <label class="flex flex-col gap-2 text-caption font-semibold">
+      Description
+      <textarea name="description" rows="4" class="rounded-md border border-border-default bg-background-default px-3 py-2 text-body-sm font-normal hover:border-border-strong focus:border-border-active">{{description}}</textarea>
+    </label>
+
+    <button type="submit" class="h-12 w-full rounded-md bg-action-primary-background text-body-sm font-semibold text-action-primary-foreground hover:bg-action-primary-hover sm:w-60">{{button}}</button>
+  </form>
+</div>
