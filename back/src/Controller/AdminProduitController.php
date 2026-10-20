@@ -1,0 +1,166 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controller;
+
+use App\Core\Request;
+use App\Core\Response;
+use App\Model\ProduitModel;
+
+final class AdminProduitController
+{
+    private ProduitModel $produits;
+
+    public function __construct(ProduitModel $produits)
+    {
+        $this->produits = $produits;
+    }
+
+    public function index(): void
+    {
+        $this->verifierAdministrateur();
+
+        Response::json(['produits' => $this->produits->listerTout()]);
+    }
+
+    public function show(Request $requete): void
+    {
+        $this->verifierAdministrateur();
+
+        $id      = (int) ($requete->parametre('id', '0') ?? '0');
+        $produit = null;
+
+        if ($id > 0) {
+            $produit = $this->produits->trouverParId($id);
+
+            if ($produit === null) {
+                Response::erreur('Produit introuvable.', 404);
+            }
+        }
+
+        Response::json(['produit' => $produit, 'categories' => $this->produits->categories()]);
+    }
+
+    public function create(Request $requete): void
+    {
+        $this->verifierAdministrateur();
+
+        $produit = $this->lireProduit($requete->corps(), 0);
+        $id      = $this->produits->ajouter($produit);
+
+        Response::json(['produit' => ['id' => $id]], 201);
+    }
+
+    public function update(Request $requete): void
+    {
+        $this->verifierAdministrateur();
+
+        $corps = $requete->corps();
+        $id    = (int) ($corps['id'] ?? 0);
+
+        if ($this->produits->trouverParId($id) === null) {
+            Response::erreur('Produit introuvable.', 404);
+        }
+
+        $this->produits->modifier($id, $this->lireProduit($corps, $id));
+
+        Response::json(['produit' => ['id' => $id]]);
+    }
+
+    public function remove(Request $requete): void
+    {
+        $this->verifierAdministrateur();
+
+        $id = (int) ($requete->corps()['id'] ?? 0);
+
+        if ($this->produits->trouverParId($id) === null) {
+            Response::erreur('Produit introuvable.', 404);
+        }
+
+        $this->produits->supprimer($id);
+
+        Response::json(['supprime' => true]);
+    }
+
+    private function verifierAdministrateur(): void
+    {
+        if (($_SESSION['administrateur'] ?? null) === null) {
+            Response::erreur('Accès réservé aux administrateurs.', 401);
+        }
+    }
+
+    private function lireProduit(array $corps, int $id): array
+    {
+        $titre             = trim((string) ($corps['titre'] ?? ''));
+        $urlName           = trim((string) ($corps['urlName'] ?? ''));
+        $description       = trim((string) ($corps['description'] ?? ''));
+        $descriptionLongue = trim((string) ($corps['descriptionLongue'] ?? ''));
+        $couleurs          = trim((string) ($corps['couleurs'] ?? ''));
+        $image             = trim((string) ($corps['image'] ?? ''));
+        $prix              = (float) str_replace(',', '.', (string) ($corps['prix'] ?? '0'));
+        $stock             = (int) ($corps['stock'] ?? 0);
+        $categorieId       = (int) ($corps['categorieId'] ?? 0);
+
+        if ($titre === '' || strlen($titre) > 160) {
+            Response::erreur('Le titre est obligatoire (160 caractères maximum).', 400);
+        }
+
+        if ($urlName === '' || strlen($urlName) > 160 || preg_match('/^[a-z0-9-]+$/', $urlName) !== 1) {
+            Response::erreur("Le nom dans l'URL est obligatoire : lettres minuscules, chiffres et tirets seulement.", 400);
+        }
+
+        if ($description === '' || strlen($description) > 120) {
+            Response::erreur('La description courte est obligatoire (120 caractères maximum).', 400);
+        }
+
+        if ($descriptionLongue === '') {
+            Response::erreur('La description détaillée est obligatoire.', 400);
+        }
+
+        if ($prix <= 0 || $prix >= 100000) {
+            Response::erreur('Le prix doit être supérieur à 0 et inférieur à 100 000.', 400);
+        }
+
+        if ($stock < 0 || $stock > 65535) {
+            Response::erreur('Le stock doit être compris entre 0 et 65 535.', 400);
+        }
+
+        if ($couleurs === '' || strlen($couleurs) > 120) {
+            Response::erreur('Les couleurs sont obligatoires (120 caractères maximum).', 400);
+        }
+
+        if ($image === '' || strlen($image) > 255) {
+            Response::erreur("L'image est obligatoire (255 caractères maximum).", 400);
+        }
+
+        $categories = $this->produits->categories();
+        $existe     = false;
+
+        for ($i = 0; $i < count($categories); $i++) {
+            if ($categories[$i]['id'] === $categorieId) {
+                $existe = true;
+            }
+        }
+
+        if (!$existe) {
+            Response::erreur('Catégorie invalide.', 400);
+        }
+
+        if ($this->produits->nomUrlPris($urlName, $id)) {
+            Response::erreur("Ce nom dans l'URL est déjà utilisé par un autre produit.", 409);
+        }
+
+        return [
+            'titre'             => $titre,
+            'urlName'           => $urlName,
+            'description'       => $description,
+            'descriptionLongue' => $descriptionLongue,
+            'prix'              => round($prix, 2),
+            'couleurs'          => $couleurs,
+            'image'             => $image,
+            'stock'             => $stock,
+            'categorieId'       => $categorieId,
+        ];
+    }
+}

@@ -1,0 +1,14 @@
+<section class="mx-auto max-w-6xl px-4 py-8 font-body text-text-primary sm:px-6 sm:py-10">
+  <slot name="nav"></slot>
+
+  <div class="mt-8 flex flex-wrap items-center justify-between gap-4">
+    <h1 class="text-heading-lg font-bold">Produits</h1>
+    <a href="/admin/produits/nouveau" data-link class="flex h-11 items-center rounded-md bg-action-primary-background px-6 text-body-sm font-semibold text-action-primary-foreground hover:bg-action-primary-hover">Ajouter un produit</a>
+  </div>
+
+  <div class="mt-6 empty:hidden">
+    <slot name="message"></slot>
+  </div>
+
+  <slot name="liste"></slot>
+</section>

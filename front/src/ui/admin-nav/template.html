@@ -1,4 +1,9 @@
-<nav class="flex flex-wrap items-center gap-2 border-b border-border-default pb-4 font-body">
-  <slot name="items"></slot>
-  <button type="button" data-action="logout" class="ml-auto h-9 rounded-md border border-border-default bg-surface-default px-4 text-caption font-semibold text-text-primary hover:bg-surface-hover">Se déconnecter</button>
-</nav>
+<div class="font-body">
+  <div class="mb-4 flex justify-end">
+    <button type="button" data-action="logout" class="h-9 rounded-md border border-border-default bg-surface-default px-4 text-caption font-semibold text-text-primary hover:bg-surface-hover">Se déconnecter</button>
+  </div>
+
+  <nav class="flex flex-col sm:flex-row">
+    <slot name="items"></slot>
+  </nav>
+</div>

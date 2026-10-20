@@ -3,7 +3,6 @@ import { StatsData } from "../../data/stats.js";
 import { htmlToFragment } from "../../lib/utils.js";
 import { AdminNavView } from "../../ui/admin-nav/index.js";
 import { FormulaireAuthView } from "../../ui/formulaire-auth/index.js";
-import { IndicateursView } from "../../ui/indicateurs/index.js";
 import { MessageView } from "../../ui/message/index.js";
 import template from "./template.html?raw";
 
@@ -26,19 +25,10 @@ M.load = async function () {
 };
 
 M.getPage = function () {
-  let indicators = [];
-  if (M.stats !== null) {
-    indicators = [
-      { label: "Produits", value: M.stats.produits },
-      { label: "Commandes", value: M.stats.commandes },
-    ];
-  }
-
   return {
     message: M.message,
     connected: M.adminEmail !== null,
-    sections: ["Produits", "Commandes", "Catégories", "Statistiques"],
-    indicators: indicators,
+    stats: M.stats,
     form: {
       title: "Administration",
       subtitle: "Connectez-vous à l'espace d'administration.",
@@ -119,7 +109,7 @@ V.createPageFragment = function (data) {
 
   if (!data.connected) {
     pageFragment.querySelector('slot[name="nav"]').remove();
-    pageFragment.querySelector('slot[name="indicateurs"]').remove();
+    pageFragment.querySelector('[data-welcome]').remove();
     pageFragment.querySelector('slot[name="formulaire"]').replaceWith(
       FormulaireAuthView.dom(data.form, { submit: C.handler_submit })
     );
@@ -128,9 +118,8 @@ V.createPageFragment = function (data) {
 
   pageFragment.querySelector('slot[name="formulaire"]').remove();
   pageFragment.querySelector('slot[name="nav"]').replaceWith(
-    AdminNavView.dom(data.sections, { logout: C.handler_clickOnLogout })
+    AdminNavView.dom(data.stats, { logout: C.handler_clickOnLogout })
   );
-  pageFragment.querySelector('slot[name="indicateurs"]').replaceWith(IndicateursView.dom(data.indicators));
 
   return pageFragment;
 };

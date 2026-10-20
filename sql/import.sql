@@ -202,13 +202,14 @@ CREATE TABLE `commande` (
 --
 -- Structure de la table `ligne_commande`
 --
--- titre et prix_unitaire sont figés au moment de la commande.
+-- titre et prix_unitaire sont figés au moment de la commande. Si le produit
+-- est supprimé, produit_id passe à NULL et la ligne est conservée.
 --
 
 CREATE TABLE `ligne_commande` (
   `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   `commande_id` int(10) UNSIGNED NOT NULL,
-  `produit_id` smallint(5) UNSIGNED NOT NULL,
+  `produit_id` smallint(5) UNSIGNED DEFAULT NULL,
   `titre` varchar(160) NOT NULL,
   `prix_unitaire` decimal(7,2) NOT NULL,
   `quantite` smallint(5) UNSIGNED NOT NULL,
@@ -216,7 +217,7 @@ CREATE TABLE `ligne_commande` (
   KEY `idx_ligne_commande_commande` (`commande_id`),
   KEY `idx_ligne_commande_produit` (`produit_id`),
   CONSTRAINT `fk_ligne_commande_commande` FOREIGN KEY (`commande_id`) REFERENCES `commande` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_ligne_commande_produit` FOREIGN KEY (`produit_id`) REFERENCES `produit` (`id`) ON UPDATE CASCADE
+  CONSTRAINT `fk_ligne_commande_produit` FOREIGN KEY (`produit_id`) REFERENCES `produit` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -230,7 +231,7 @@ CREATE TABLE `ligne_commande` (
 
 CREATE TABLE `mouvement_stock` (
   `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `produit_id` smallint(5) UNSIGNED NOT NULL,
+  `produit_id` smallint(5) UNSIGNED DEFAULT NULL,
   `commande_id` int(10) UNSIGNED NOT NULL,
   `type` varchar(20) NOT NULL,
   `quantite` smallint(6) NOT NULL,
@@ -238,7 +239,7 @@ CREATE TABLE `mouvement_stock` (
   PRIMARY KEY (`id`),
   KEY `idx_mouvement_stock_produit` (`produit_id`),
   KEY `idx_mouvement_stock_commande` (`commande_id`),
-  CONSTRAINT `fk_mouvement_stock_produit` FOREIGN KEY (`produit_id`) REFERENCES `produit` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `fk_mouvement_stock_produit` FOREIGN KEY (`produit_id`) REFERENCES `produit` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `fk_mouvement_stock_commande` FOREIGN KEY (`commande_id`) REFERENCES `commande` (`id`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
