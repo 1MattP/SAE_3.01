@@ -15,7 +15,7 @@ StockData.adjust = async function (lines) {
   }
 
   let items = lines.map(function (line) {
-    return { urlName: line.urlName, quantity: line.quantity };
+    return { urlName: line.urlName, quantity: line.quantity, options: line.options, couleur: line.couleur };
   });
   let data = await StockData.verify(items);
 

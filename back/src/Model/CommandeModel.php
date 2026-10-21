@@ -44,21 +44,21 @@ final class CommandeModel
         $requetePreparee->bindValue(':id',     $id,     PDO::PARAM_INT);
         $requetePreparee->execute();
 
-        $sql = 'INSERT INTO ligne_commande (commande_id, produit_id, titre, options, couleur, prix_unitaire, quantite)
-                VALUES (:commande, :produit, :titre, :options, :couleur, :prix, :quantite)';
+        $sql = 'INSERT INTO ligne_commande (commande_id, produit_id, variante_id, titre, options, couleur, prix_unitaire, quantite)
+                VALUES (:commande, :produit, :variante, :titre, :options, :couleur, :prix, :quantite)';
 
         $insertion = $this->pdo->prepare($sql);
 
-        $sql = 'UPDATE produit
+        $sql = 'UPDATE variante
                    SET stock = stock - :quantite
-                 WHERE id = :produit AND stock >= :minimum';
+                 WHERE id = :variante AND stock >= :minimum';
 
         $decrement = $this->pdo->prepare($sql);
 
         for ($i = 0; $i < count($lignes); $i++) {
             $decrement->bindValue(':quantite', $lignes[$i]['quantite'], PDO::PARAM_INT);
             $decrement->bindValue(':minimum',  $lignes[$i]['quantite'], PDO::PARAM_INT);
-            $decrement->bindValue(':produit',  $lignes[$i]['produit'],  PDO::PARAM_INT);
+            $decrement->bindValue(':variante', $lignes[$i]['variante'], PDO::PARAM_INT);
             $decrement->execute();
 
             if ($decrement->rowCount() === 0) {
@@ -68,6 +68,7 @@ final class CommandeModel
 
             $insertion->bindValue(':commande', $id,                      PDO::PARAM_INT);
             $insertion->bindValue(':produit',  $lignes[$i]['produit'],   PDO::PARAM_INT);
+            $insertion->bindValue(':variante', $lignes[$i]['variante'],  PDO::PARAM_INT);
             $insertion->bindValue(':titre',    $lignes[$i]['titre'],     PDO::PARAM_STR);
             $insertion->bindValue(':options',  $lignes[$i]['options'],   PDO::PARAM_STR);
             $insertion->bindValue(':couleur',  $lignes[$i]['couleur'],   PDO::PARAM_STR);
@@ -75,7 +76,7 @@ final class CommandeModel
             $insertion->bindValue(':quantite', $lignes[$i]['quantite'],  PDO::PARAM_INT);
             $insertion->execute();
 
-            $this->journaliser($lignes[$i]['produit'], $id, 'vente', -$lignes[$i]['quantite']);
+            $this->journaliser($lignes[$i]['produit'], $lignes[$i]['variante'], $id, 'vente', -$lignes[$i]['quantite']);
         }
 
         $this->pdo->commit();
@@ -103,7 +104,7 @@ final class CommandeModel
             return false;
         }
 
-        $sql = 'SELECT ligne_commande.commande_id, ligne_commande.produit_id, ligne_commande.quantite
+        $sql = 'SELECT ligne_commande.commande_id, ligne_commande.produit_id, ligne_commande.variante_id, ligne_commande.quantite
                   FROM ligne_commande
             INNER JOIN commande ON commande.id = ligne_commande.commande_id
                  WHERE commande.numero = :numero';
@@ -114,21 +115,22 @@ final class CommandeModel
 
         $lignes = $requetePreparee->fetchAll();
 
-        $sql = 'UPDATE produit SET stock = stock + :quantite WHERE id = :produit';
+        $sql = 'UPDATE variante SET stock = stock + :quantite WHERE id = :variante';
 
         $recredit = $this->pdo->prepare($sql);
 
         for ($i = 0; $i < count($lignes); $i++) {
-            if ($lignes[$i]['produit_id'] === null) {
+            if ($lignes[$i]['variante_id'] === null) {
                 continue;
             }
 
             $recredit->bindValue(':quantite', (int) $lignes[$i]['quantite'],   PDO::PARAM_INT);
-            $recredit->bindValue(':produit',  (int) $lignes[$i]['produit_id'], PDO::PARAM_INT);
+            $recredit->bindValue(':variante', (int) $lignes[$i]['variante_id'], PDO::PARAM_INT);
             $recredit->execute();
 
             $this->journaliser(
                 (int) $lignes[$i]['produit_id'],
+                (int) $lignes[$i]['variante_id'],
                 (int) $lignes[$i]['commande_id'],
                 'annulation',
                 (int) $lignes[$i]['quantite'],
@@ -140,13 +142,14 @@ final class CommandeModel
         return true;
     }
 
-    private function journaliser(int $produit, int $commande, string $type, int $quantite): void
+    private function journaliser(int $produit, int $variante, int $commande, string $type, int $quantite): void
     {
-        $sql = 'INSERT INTO mouvement_stock (produit_id, commande_id, type, quantite)
-                VALUES (:produit, :commande, :type, :quantite)';
+        $sql = 'INSERT INTO mouvement_stock (produit_id, variante_id, commande_id, type, quantite)
+                VALUES (:produit, :variante, :commande, :type, :quantite)';
 
         $requetePreparee = $this->pdo->prepare($sql);
         $requetePreparee->bindValue(':produit',  $produit,  PDO::PARAM_INT);
+        $requetePreparee->bindValue(':variante', $variante, PDO::PARAM_INT);
         $requetePreparee->bindValue(':commande', $commande, PDO::PARAM_INT);
         $requetePreparee->bindValue(':type',     $type,     PDO::PARAM_STR);
         $requetePreparee->bindValue(':quantite', $quantite, PDO::PARAM_INT);

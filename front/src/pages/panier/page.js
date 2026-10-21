@@ -2,6 +2,7 @@ import { ProduitData } from "../../data/produits.js";
 import { PanierData } from "../../data/panier.js";
 import { StockData } from "../../data/stocks.js";
 import { htmlToFragment } from "../../lib/utils.js";
+import { marquerIndisponibles } from "../../lib/variantes.js";
 import { MessageView } from "../../ui/message/index.js";
 import { PanierView } from "../../ui/panier/index.js";
 import { RecapitulatifView } from "../../ui/recapitulatif/index.js";
@@ -130,17 +131,19 @@ C.handler_modifierOptions = async function (ev) {
     });
 
     let couleur = line.couleur;
-    if (!data.produit.couleurs.includes(couleur) && data.produit.couleurs.length > 0) {
+    if (!data.produit.couleurs.includes(couleur)) {
       couleur = data.produit.couleurs[0];
     }
 
     M.edition = {
       cle: line.cle,
-      options: data.produit.options,
-      couleurs: data.produit.couleurs,
+      produit: data.produit,
       selection: selection,
       couleur: couleur,
+      groupes: [],
+      teintes: [],
     };
+    C.calculerEdition();
     M.message = null;
   } catch (erreur) {
     M.message = { type: "erreur", texte: erreur.message };
@@ -149,13 +152,28 @@ C.handler_modifierOptions = async function (ev) {
   V.rafraichir();
 };
 
+C.calculerEdition = function () {
+  let etat = marquerIndisponibles(
+    M.edition.produit.options,
+    M.edition.produit.couleurs,
+    M.edition.produit.variantes,
+    M.edition.selection,
+    M.edition.couleur
+  );
+
+  M.edition.groupes = etat.groupes;
+  M.edition.teintes = etat.couleurs;
+};
+
 C.handler_choisirOption = function (groupe, valeur) {
   M.edition.selection[groupe] = valeur;
+  C.calculerEdition();
   V.rafraichir();
 };
 
 C.handler_choisirCouleur = function (code) {
   M.edition.couleur = code;
+  C.calculerEdition();
   V.rafraichir();
 };
 
@@ -170,8 +188,8 @@ C.handler_enregistrerOptions = async function () {
   });
 
   let textes = [];
-  for (let i = 0; i < M.edition.options.length; i++) {
-    let groupe = M.edition.options[i];
+  for (let i = 0; i < M.edition.produit.options.length; i++) {
+    let groupe = M.edition.produit.options[i];
     let valeur = groupe.valeurs.find(function (item) {
       return `${item.id}` === M.edition.selection[i];
     });

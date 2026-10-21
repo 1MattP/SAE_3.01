@@ -18,6 +18,10 @@ AdminProduitData.update = async function (produit) {
   return postRequest("admin/produits/modifier", produit);
 };
 
+AdminProduitData.saveStocks = async function (id, stocks) {
+  return postRequest("admin/produits/stocks", { id, stocks });
+};
+
 AdminProduitData.remove = async function (id) {
   return postRequest("admin/produits/supprimer", { id });
 };

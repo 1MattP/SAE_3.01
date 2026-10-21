@@ -16,11 +16,12 @@ let CouleursProduitView = {
 
     let pastilles = data.couleurs.map(function (couleur) {
       let pastille = htmlToFragment(genericRenderer(templatePastille, {
-        code: couleur,
+        code: couleur.code,
       }));
 
       let element = pastille.firstElementChild;
-      element.setAttribute("aria-pressed", couleur === data.selection);
+      element.setAttribute("aria-pressed", couleur.code === data.selection);
+      element.disabled = couleur.disabled;
       element.addEventListener("click", function (ev) {
         actions.choose(ev.currentTarget.dataset.code);
       });

@@ -41,6 +41,7 @@ return [
     'POST /api/admin/produits' => [AdminProduitController::class, 'create'],
     'POST /api/admin/produits/modifier'  => [AdminProduitController::class, 'update'],
     'POST /api/admin/produits/supprimer' => [AdminProduitController::class, 'remove'],
+    'POST /api/admin/produits/stocks'    => [AdminProduitController::class, 'stocks'],
     'GET  /api/admin/categories' => [AdminCategorieController::class, 'index'],
     'GET  /api/admin/categorie'  => [AdminCategorieController::class, 'show'],
     'POST /api/admin/categories' => [AdminCategorieController::class, 'create'],

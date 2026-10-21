@@ -4,6 +4,7 @@ import { StatsData } from "../../data/stats.js";
 import { htmlToFragment } from "../../lib/utils.js";
 import { AdminNavView } from "../../ui/admin-nav/index.js";
 import { FormulaireProduitView } from "../../ui/formulaire-produit/index.js";
+import { TableauVariantesView } from "../../ui/tableau-variantes/index.js";
 import { MessageView } from "../../ui/message/index.js";
 import template from "./template.html?raw";
 
@@ -13,6 +14,7 @@ let M = {
   adminEmail: null,
   stats: null,
   categories: [],
+  variantes: [],
   values: null,
   message: null,
 };
@@ -37,7 +39,6 @@ C.charger = async function (id) {
       description: "",
       descriptionLongue: "",
       prix: "",
-      stock: "0",
       couleurs: "",
       image: "",
       images: ["", "", ""],
@@ -45,8 +46,11 @@ C.charger = async function (id) {
       categorieId: M.categories[0].id,
     };
 
+    M.variantes = [];
+
     if (result.produit !== null) {
       M.values = result.produit;
+      M.variantes = result.produit.variantes;
     }
   }
 };
@@ -65,7 +69,24 @@ C.handler_enregistrerProduit = async function (values) {
     }
 
     M.stats = await StatsData.fetch();
+
+    let result = await AdminProduitData.fetchOne(M.id);
+    M.variantes = result.produit.variantes;
     M.message = { type: "succes", texte: creation ? "Produit ajouté." : "Produit modifié." };
+  } catch (erreur) {
+    M.message = { type: "erreur", texte: erreur.message };
+  }
+
+  V.rafraichir();
+};
+
+C.handler_enregistrerStocks = async function (stocks) {
+  try {
+    await AdminProduitData.saveStocks(M.id, stocks);
+
+    let result = await AdminProduitData.fetchOne(M.id);
+    M.variantes = result.produit.variantes;
+    M.message = { type: "succes", texte: "Stocks enregistrés." };
   } catch (erreur) {
     M.message = { type: "erreur", texte: erreur.message };
   }
@@ -133,6 +154,7 @@ V.createPageFragment = function () {
   if (M.stats === null) {
     pageFragment.querySelector('slot[name="nav"]').remove();
     pageFragment.querySelector('slot[name="formulaire"]').remove();
+    pageFragment.querySelector('slot[name="variantes"]').remove();
     return pageFragment;
   }
 
@@ -153,6 +175,15 @@ V.createPageFragment = function () {
       { submit: C.handler_enregistrerProduit }
     )
   );
+
+  let slotVariantes = pageFragment.querySelector('slot[name="variantes"]');
+  if (M.variantes.length === 0) {
+    slotVariantes.remove();
+  } else {
+    slotVariantes.replaceWith(
+      TableauVariantesView.dom(M.variantes, { submit: C.handler_enregistrerStocks })
+    );
+  }
 
   return pageFragment;
 };

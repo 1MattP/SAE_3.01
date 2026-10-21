@@ -45,7 +45,7 @@ final class PanierController
             $stock   = 0;
 
             if ($produit !== null) {
-                $stock = (int) $produit['stock'];
+                $stock = $this->stockVariante($produit, $demande);
             }
 
             $lignes[] = [
@@ -56,5 +56,34 @@ final class PanierController
         }
 
         Response::json(['lines' => $lignes]);
+    }
+
+    private function stockVariante(array $produit, array $demande): int
+    {
+        $choix = $demande['options'] ?? [];
+
+        if (!is_array($choix)) {
+            return 0;
+        }
+
+        $ids = [];
+
+        for ($i = 0; $i < count($choix); $i++) {
+            $ids[] = (int) $choix[$i];
+        }
+
+        $options = $this->produits->choisirOptions((int) $produit['id'], $ids);
+
+        if ($options === null) {
+            return 0;
+        }
+
+        $variante = $this->produits->trouverVariante((int) $produit['id'], $options['cle'], (string) ($demande['couleur'] ?? ''));
+
+        if ($variante === null) {
+            return 0;
+        }
+
+        return (int) $variante['stock'];
     }
 }

@@ -45,9 +45,9 @@ let PanierView = {
           let panneau = EditionOptionsView.dom(
             {
               cle: line.cle,
-              couleurs: line.edition.couleurs,
+              couleurs: line.edition.teintes,
               couleur: line.edition.couleur,
-              options: line.edition.options,
+              options: line.edition.groupes,
               selection: line.edition.selection,
             },
             { color: actions.color, option: actions.option }
