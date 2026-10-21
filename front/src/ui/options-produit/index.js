@@ -26,6 +26,7 @@ let OptionsProduitView = {
 
         let element = bouton.firstElementChild;
         element.setAttribute("aria-pressed", `${valeur.id}` === data.selection[index]);
+        element.disabled = valeur.disabled;
         element.addEventListener("click", function (ev) {
           actions.choose(ev.currentTarget.dataset.groupe, ev.currentTarget.dataset.valeur);
         });

@@ -19,6 +19,9 @@ final class ProduitModel
 
     private int $seuilStock;
 
+    private const TOTAL = 'LEFT JOIN (SELECT produit_id, SUM(stock) AS stock FROM variante GROUP BY produit_id) AS total
+                                  ON total.produit_id = produit.id';
+
     public function __construct(PDO $pdo, int $seuilStock)
     {
         $this->pdo        = $pdo;
@@ -48,12 +51,13 @@ final class ProduitModel
                     produit.prix,
                     produit.couleurs,
                     produit.image,
-                    CASE WHEN produit.stock = 0 THEN 'epuise'
-                         WHEN produit.stock <= :seuil THEN 'bientot_epuise'
+                    CASE WHEN COALESCE(total.stock, 0) = 0 THEN 'epuise'
+                         WHEN total.stock <= :seuil THEN 'bientot_epuise'
                          ELSE 'en_stock' END AS etatStock,
                     categorie.libelle AS categorie
                 FROM produit
             INNER JOIN categorie ON categorie.id = produit.categorie_id
+            " . self::TOTAL . "
                 WHERE :toutes = 0 OR produit.categorie_id = :categorie
             ORDER BY produit.titre, produit.id
                 LIMIT :limite OFFSET :decalage";
@@ -78,13 +82,14 @@ final class ProduitModel
                        produit.description_longue,
                        produit.prix,
                        produit.couleurs,
-                       produit.stock,
-                       CASE WHEN produit.stock = 0 THEN 'epuise'
-                            WHEN produit.stock <= :seuil THEN 'bientot_epuise'
+                       COALESCE(total.stock, 0) AS stock,
+                       CASE WHEN COALESCE(total.stock, 0) = 0 THEN 'epuise'
+                            WHEN total.stock <= :seuil THEN 'bientot_epuise'
                             ELSE 'en_stock' END AS etatStock,
                        categorie.libelle AS categorie
                   FROM produit
             INNER JOIN categorie ON categorie.id = produit.categorie_id
+            " . self::TOTAL . "
                  WHERE produit.nom_url = :urlName";
 
         $requetePreparee = $this->pdo->prepare($sql);
@@ -119,11 +124,12 @@ final class ProduitModel
                        produit.titre,
                        produit.nom_url AS urlName,
                        produit.prix,
-                       produit.stock,
+                       COALESCE(total.stock, 0) AS stock,
                        produit.image,
                        categorie.libelle AS categorie
                   FROM produit
             INNER JOIN categorie ON categorie.id = produit.categorie_id
+            ' . self::TOTAL . '
               ORDER BY produit.titre, produit.id';
 
         return $this->pdo->query($sql)->fetchAll();
@@ -139,7 +145,6 @@ final class ProduitModel
                        prix,
                        couleurs,
                        image,
-                       stock,
                        categorie_id AS categorieId
                   FROM produit
                  WHERE id = :id';
@@ -161,7 +166,8 @@ final class ProduitModel
             $ligne['images'][] = $images[$i];
         }
 
-        $ligne['options'] = $this->texteOptions($this->options($id));
+        $ligne['options']   = $this->texteOptions($this->options($id));
+        $ligne['variantes'] = $this->variantesAvecLibelle($id);
 
         return $ligne;
     }
@@ -182,8 +188,8 @@ final class ProduitModel
     {
         $this->pdo->beginTransaction();
 
-        $sql = 'INSERT INTO produit (titre, nom_url, description, description_longue, prix, couleurs, image, stock, categorie_id)
-                VALUES (:titre, :urlName, :description, :descriptionLongue, :prix, :couleurs, :image, :stock, :categorie)';
+        $sql = 'INSERT INTO produit (titre, nom_url, description, description_longue, prix, couleurs, image, categorie_id)
+                VALUES (:titre, :urlName, :description, :descriptionLongue, :prix, :couleurs, :image, :categorie)';
 
         $requetePreparee = $this->pdo->prepare($sql);
         $this->lierProduit($requetePreparee, $produit);
@@ -193,6 +199,7 @@ final class ProduitModel
 
         $this->enregistrerImages($id, $produit['image'], $produit['images']);
         $this->enregistrerOptions($id, $produit['options']);
+        $this->synchroniserVariantes($id, $produit['couleurs'], []);
 
         $this->pdo->commit();
 
@@ -203,6 +210,8 @@ final class ProduitModel
     {
         $this->pdo->beginTransaction();
 
+        $anciennes = $this->variantesAvecLibelle($id);
+
         $sql = 'UPDATE produit
                    SET titre = :titre,
                        nom_url = :urlName,
@@ -211,7 +220,6 @@ final class ProduitModel
                        prix = :prix,
                        couleurs = :couleurs,
                        image = :image,
-                       stock = :stock,
                        categorie_id = :categorie
                  WHERE id = :id';
 
@@ -225,6 +233,8 @@ final class ProduitModel
         if ($this->texteOptions($this->options($id)) !== $this->texteOptions($produit['options'])) {
             $this->enregistrerOptions($id, $produit['options']);
         }
+
+        $this->synchroniserVariantes($id, $produit['couleurs'], $anciennes);
 
         $this->pdo->commit();
     }
@@ -247,7 +257,6 @@ final class ProduitModel
         $requetePreparee->bindValue(':prix',              $produit['prix'],              PDO::PARAM_STR);
         $requetePreparee->bindValue(':couleurs',          $produit['couleurs'],          PDO::PARAM_STR);
         $requetePreparee->bindValue(':image',             $produit['image'],             PDO::PARAM_STR);
-        $requetePreparee->bindValue(':stock',             $produit['stock'],             PDO::PARAM_INT);
         $requetePreparee->bindValue(':categorie',         $produit['categorieId'],       PDO::PARAM_INT);
     }
 
@@ -322,7 +331,7 @@ final class ProduitModel
         return $groupes;
     }
 
-    public function choisirOptions(int $produit, array $choix): ?string
+    public function choisirOptions(int $produit, array $choix): ?array
     {
         $groupes = $this->options($produit);
 
@@ -331,6 +340,7 @@ final class ProduitModel
         }
 
         $textes = [];
+        $cle    = [];
 
         for ($i = 0; $i < count($groupes); $i++) {
             $trouve = null;
@@ -346,9 +356,10 @@ final class ProduitModel
             }
 
             $textes[] = $groupes[$i]['nom'] . ' : ' . $trouve['libelle'];
+            $cle[]    = $trouve['id'];
         }
 
-        return implode(', ', $textes);
+        return ['texte' => implode(', ', $textes), 'cle' => implode(',', $cle)];
     }
 
     public function texteOptions(array $groupes): string
@@ -395,6 +406,150 @@ final class ProduitModel
                 $insertionValeur->bindValue(':groupe',     $groupe,                                      PDO::PARAM_INT);
                 $insertionValeur->bindValue(':libelle',    $groupes[$i]['valeurs'][$j]['libelle'],       PDO::PARAM_STR);
                 $insertionValeur->execute();
+            }
+        }
+    }
+
+    public function variantes(int $produit): array
+    {
+        $sql = "SELECT id,
+                       cle,
+                       couleur,
+                       stock,
+                       CASE WHEN stock = 0 THEN 'epuise'
+                            WHEN stock <= :seuil THEN 'bientot_epuise'
+                            ELSE 'en_stock' END AS etatStock
+                  FROM variante
+                 WHERE produit_id = :produit
+              ORDER BY id";
+
+        $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':seuil',   $this->seuilStock, PDO::PARAM_INT);
+        $requetePreparee->bindValue(':produit', $produit,          PDO::PARAM_INT);
+        $requetePreparee->execute();
+
+        return $requetePreparee->fetchAll();
+    }
+
+    public function trouverVariante(int $produit, string $cle, string $couleur): ?array
+    {
+        $sql = 'SELECT id, stock
+                  FROM variante
+                 WHERE produit_id = :produit AND cle = :cle AND couleur = :couleur';
+
+        $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':produit', $produit, PDO::PARAM_INT);
+        $requetePreparee->bindValue(':cle',     $cle,     PDO::PARAM_STR);
+        $requetePreparee->bindValue(':couleur', $couleur, PDO::PARAM_STR);
+        $requetePreparee->execute();
+
+        $ligne = $requetePreparee->fetch();
+
+        return $ligne === false ? null : $ligne;
+    }
+
+    public function modifierStocks(int $produit, array $stocks): void
+    {
+        $sql = 'UPDATE variante SET stock = :stock WHERE id = :id AND produit_id = :produit';
+
+        $requetePreparee = $this->pdo->prepare($sql);
+
+        for ($i = 0; $i < count($stocks); $i++) {
+            $requetePreparee->bindValue(':stock',   $stocks[$i]['stock'], PDO::PARAM_INT);
+            $requetePreparee->bindValue(':id',      $stocks[$i]['id'],    PDO::PARAM_INT);
+            $requetePreparee->bindValue(':produit', $produit,             PDO::PARAM_INT);
+            $requetePreparee->execute();
+        }
+    }
+
+    public function variantesAvecLibelle(int $produit): array
+    {
+        $groupes   = $this->options($produit);
+        $variantes = $this->variantes($produit);
+
+        for ($i = 0; $i < count($variantes); $i++) {
+            $variantes[$i]['libelle'] = $this->libelleCombinaison($groupes, $variantes[$i]['cle']);
+        }
+
+        return $variantes;
+    }
+
+    private function libelleCombinaison(array $groupes, string $cle): string
+    {
+        if ($cle === '') {
+            return '';
+        }
+
+        $ids     = explode(',', $cle);
+        $libelle = [];
+
+        for ($i = 0; $i < count($groupes); $i++) {
+            for ($j = 0; $j < count($groupes[$i]['valeurs']); $j++) {
+                if (in_array((string) $groupes[$i]['valeurs'][$j]['id'], $ids, true)) {
+                    $libelle[] = $groupes[$i]['nom'] . ' : ' . $groupes[$i]['valeurs'][$j]['libelle'];
+                }
+            }
+        }
+
+        return implode(', ', $libelle);
+    }
+
+    private function synchroniserVariantes(int $produit, string $couleurs, array $anciennes): void
+    {
+        $groupes = $this->options($produit);
+        $cles    = [''];
+
+        for ($i = 0; $i < count($groupes); $i++) {
+            $suite = [];
+
+            for ($k = 0; $k < count($cles); $k++) {
+                for ($j = 0; $j < count($groupes[$i]['valeurs']); $j++) {
+                    $suite[] = ($cles[$k] === '' ? '' : $cles[$k] . ',') . $groupes[$i]['valeurs'][$j]['id'];
+                }
+            }
+
+            $cles = $suite;
+        }
+
+        $codes   = $this->listerCouleurs($couleurs);
+        $gardees = [];
+
+        $miseAJour = $this->pdo->prepare('UPDATE variante SET cle = :cle WHERE id = :id');
+        $insertion = $this->pdo->prepare('INSERT INTO variante (produit_id, cle, couleur, stock) VALUES (:produit, :cle, :couleur, 0)');
+
+        for ($k = 0; $k < count($cles); $k++) {
+            $libelle = $this->libelleCombinaison($groupes, $cles[$k]);
+
+            for ($c = 0; $c < count($codes); $c++) {
+                $ancienne = null;
+
+                for ($a = 0; $a < count($anciennes); $a++) {
+                    if ($anciennes[$a]['libelle'] === $libelle && $anciennes[$a]['couleur'] === $codes[$c]) {
+                        $ancienne = $anciennes[$a];
+                    }
+                }
+
+                if ($ancienne !== null) {
+                    $miseAJour->bindValue(':cle', $cles[$k],       PDO::PARAM_STR);
+                    $miseAJour->bindValue(':id',  $ancienne['id'], PDO::PARAM_INT);
+                    $miseAJour->execute();
+
+                    $gardees[] = $ancienne['id'];
+                } else {
+                    $insertion->bindValue(':produit', $produit,    PDO::PARAM_INT);
+                    $insertion->bindValue(':cle',     $cles[$k],   PDO::PARAM_STR);
+                    $insertion->bindValue(':couleur', $codes[$c],  PDO::PARAM_STR);
+                    $insertion->execute();
+                }
+            }
+        }
+
+        $suppression = $this->pdo->prepare('DELETE FROM variante WHERE id = :id');
+
+        for ($a = 0; $a < count($anciennes); $a++) {
+            if (!in_array($anciennes[$a]['id'], $gardees, true)) {
+                $suppression->bindValue(':id', $anciennes[$a]['id'], PDO::PARAM_INT);
+                $suppression->execute();
             }
         }
     }

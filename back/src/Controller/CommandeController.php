@@ -56,7 +56,6 @@ final class CommandeController
             }
 
             $id    = (int) $produit['id'];
-            $stock = (int) $produit['stock'];
             $choix = $demande['options'] ?? [];
 
             if (!is_array($choix)) {
@@ -69,9 +68,9 @@ final class CommandeController
                 $ids[] = (int) $choix[$k];
             }
 
-            $texte = $this->produits->choisirOptions($id, $ids);
+            $options = $this->produits->choisirOptions($id, $ids);
 
-            if ($texte === null) {
+            if ($options === null) {
                 Response::erreur('Les options de ' . $produit['titre'] . ' ont changé : retirez-le du panier puis ajoutez-le à nouveau.', 409);
             }
 
@@ -86,13 +85,27 @@ final class CommandeController
                 $couleur = '';
             }
 
-            $totaux[$id] = ($totaux[$id] ?? 0) + $quantite;
+            $variante = $this->produits->trouverVariante($id, $options['cle'], $couleur);
 
-            if ($totaux[$id] > $stock) {
-                $message = $produit['titre'] . ' est épuisé.';
+            if ($variante === null) {
+                Response::erreur('Cette variante de ' . $produit['titre'] . " n'existe plus : retirez-la du panier puis ajoutez-la à nouveau.", 409);
+            }
+
+            $varianteId = (int) $variante['id'];
+            $stock      = (int) $variante['stock'];
+            $nom        = $produit['titre'];
+
+            if ($options['texte'] !== '') {
+                $nom .= ' (' . $options['texte'] . ')';
+            }
+
+            $totaux[$varianteId] = ($totaux[$varianteId] ?? 0) + $quantite;
+
+            if ($totaux[$varianteId] > $stock) {
+                $message = $nom . ' est épuisé.';
 
                 if ($stock > 0) {
-                    $message = 'Il ne reste que ' . $stock . ' exemplaire(s) de ' . $produit['titre'] . '.';
+                    $message = 'Il ne reste que ' . $stock . ' exemplaire(s) de ' . $nom . '.';
                 }
 
                 Response::erreur($message, 409);
@@ -103,8 +116,9 @@ final class CommandeController
 
             $lignes[] = [
                 'produit'  => $id,
+                'variante' => $varianteId,
                 'titre'    => $produit['titre'],
-                'options'  => $texte,
+                'options'  => $options['texte'],
                 'couleur'  => $couleur,
                 'prix'     => $prix,
                 'quantite' => $quantite,

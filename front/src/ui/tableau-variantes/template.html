@@ -1,0 +1,12 @@
+<div class="mt-6 max-w-2xl font-body text-text-primary">
+  <h2 class="text-heading-sm font-bold">Stock par variante</h2>
+  <p class="mt-1 text-caption text-text-secondary">Une variante est une combinaison d'options et de couleur. Les nouvelles variantes démarrent à 0.</p>
+
+  <form novalidate class="mt-4 flex flex-col gap-4">
+    <div>
+      <slot name="lines"></slot>
+    </div>
+
+    <button type="submit" class="h-12 w-full rounded-md bg-action-primary-background text-body-sm font-semibold text-action-primary-foreground hover:bg-action-primary-hover sm:w-60">Enregistrer les stocks</button>
+  </form>
+</div>

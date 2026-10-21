@@ -49,6 +49,7 @@ final class ProduitController
                 'images'            => $this->produits->images($id),
                 'options'           => $this->produits->options($id),
                 'couleurs'          => $this->produits->listerCouleurs($produit['couleurs']),
+                'variantes'         => $this->produits->variantes($id),
             ],
         ]);
     }

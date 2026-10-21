@@ -2,6 +2,7 @@ import { ProduitData } from "../../data/produits.js";
 import { PanierData } from "../../data/panier.js";
 import { StockData } from "../../data/stocks.js";
 import { htmlToFragment } from "../../lib/utils.js";
+import { choisirParDefaut, marquerIndisponibles, trouverVariante } from "../../lib/variantes.js";
 import { DetailProduitView } from "../../ui/detail-produit/index.js";
 import { MessageView } from "../../ui/message/index.js";
 import template from "./template.html?raw";
@@ -12,6 +13,9 @@ let M = {
   selectedImage: null,
   selection: [],
   couleur: "",
+  variante: null,
+  groupes: [],
+  teintes: [],
   optionsTexte: "",
   message: null,
 };
@@ -26,13 +30,9 @@ C.charger = async function (urlName) {
     let data = await ProduitData.fetchOne(urlName);
     M.produit = data.produit;
     M.selectedImage = M.produit.images[0];
-    M.selection = M.produit.options.map(function (groupe) {
-      return `${groupe.valeurs[0].id}`;
-    });
-    M.couleur = "";
-    if (M.produit.couleurs.length > 0) {
-      M.couleur = M.produit.couleurs[0];
-    }
+    let defaut = choisirParDefaut(M.produit.variantes);
+    M.selection = defaut.selection;
+    M.couleur = defaut.couleur;
     C.calculer();
   } catch (erreur) {
     M.message = { type: "erreur", texte: `Impossible d'afficher le produit : ${erreur.message}` };
@@ -52,6 +52,13 @@ C.calculer = function () {
   }
 
   M.optionsTexte = textes.join(", ");
+
+  let variante = trouverVariante(M.produit.variantes, M.selection, M.couleur);
+  M.variante = variante === undefined ? null : variante;
+
+  let etat = marquerIndisponibles(M.produit.options, M.produit.couleurs, M.produit.variantes, M.selection, M.couleur);
+  M.groupes = etat.groupes;
+  M.teintes = etat.couleurs;
 };
 
 C.handler_choisirOption = function (groupe, valeur) {
@@ -84,20 +91,13 @@ C.handler_ajouterAuPanier = async function () {
       wanted = line.quantity + 1;
     }
 
-    let data = await StockData.verify([{ urlName: M.produit.urlName, quantity: wanted }]);
+    let data = await StockData.verify([{ urlName: M.produit.urlName, quantity: wanted, options: M.selection, couleur: M.couleur }]);
     let result = data.lines[0];
 
-    let dejaDansPanier = 0;
-    for (let item of lines) {
-      if (item.urlName === M.produit.urlName) {
-        dejaDansPanier += item.quantity;
-      }
-    }
-
-    if (result.quantity < wanted || dejaDansPanier + 1 > result.stock) {
-      let texte = `${M.produit.titre} est épuisé.`;
+    if (result.quantity < wanted) {
+      let texte = `${M.produit.titre} est épuisé dans cette variante.`;
       if (result.stock > 0) {
-        texte = `Stock insuffisant : il ne reste que ${result.stock} exemplaire(s) de ${M.produit.titre}.`;
+        texte = `Stock insuffisant : il ne reste que ${result.stock} exemplaire(s) de cette variante.`;
       }
       M.message = { type: "erreur", texte: texte };
     } else {
@@ -182,11 +182,11 @@ V.createPageFragment = function () {
         categorie: M.produit.categorie,
         description: M.produit.descriptionLongue,
         mainImage: M.selectedImage,
-        etatStock: M.produit.etatStock,
+        etatStock: M.variante === null ? "epuise" : M.variante.etatStock,
         images: M.produit.images,
-        options: M.produit.options,
+        options: M.groupes,
         selection: M.selection,
-        couleurs: M.produit.couleurs,
+        couleurs: M.teintes,
         couleur: M.couleur,
       },
       {

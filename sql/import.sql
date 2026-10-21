@@ -31,6 +31,7 @@ DROP TABLE IF EXISTS `mouvement_stock`;
 DROP TABLE IF EXISTS `ligne_commande`;
 DROP TABLE IF EXISTS `commande`;
 DROP TABLE IF EXISTS `utilisateur`;
+DROP TABLE IF EXISTS `variante`;
 DROP TABLE IF EXISTS `option_valeur`;
 DROP TABLE IF EXISTS `option_groupe`;
 DROP TABLE IF EXISTS `image_produit`;
@@ -218,6 +219,81 @@ WHERE `option_groupe`.`nom` = 'Taille';
 -- --------------------------------------------------------
 
 --
+-- Structure de la table `variante`
+--
+-- Une variante est une combinaison d'options et de couleur d'un produit, avec
+-- son propre stock. cle contient les identifiants des valeurs d'options
+-- choisies, triés et séparés par des virgules (vide si le produit n'a pas
+-- d'option).
+--
+
+CREATE TABLE `variante` (
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `produit_id` smallint(5) UNSIGNED NOT NULL,
+  `cle` varchar(60) NOT NULL DEFAULT '',
+  `couleur` varchar(120) NOT NULL DEFAULT '',
+  `stock` smallint(5) UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_variante_combinaison` (`produit_id`, `cle`, `couleur`),
+  CONSTRAINT `fk_variante_produit` FOREIGN KEY (`produit_id`) REFERENCES `produit` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Une variante par valeur d'option et par couleur (jusqu'à 3 couleurs), puis
+-- une variante par couleur pour les produits sans option.
+--
+INSERT INTO `variante` (`produit_id`, `cle`, `couleur`, `stock`)
+SELECT `option_groupe`.`produit_id`,
+       CAST(`option_valeur`.`id` AS CHAR),
+       TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(`produit`.`couleurs`, ',', `rang`.`n`), ',', -1)),
+       0
+  FROM `option_valeur`
+INNER JOIN `option_groupe` ON `option_groupe`.`id` = `option_valeur`.`groupe_id`
+INNER JOIN `produit` ON `produit`.`id` = `option_groupe`.`produit_id`
+INNER JOIN (
+          SELECT 1 AS `n`
+UNION ALL SELECT 2
+UNION ALL SELECT 3
+UNION ALL SELECT 4
+UNION ALL SELECT 5
+UNION ALL SELECT 6
+) AS `rang` ON `rang`.`n` <= 1 + LENGTH(`produit`.`couleurs`) - LENGTH(REPLACE(`produit`.`couleurs`, ',', ''));
+
+INSERT INTO `variante` (`produit_id`, `cle`, `couleur`, `stock`)
+SELECT `produit`.`id`,
+       '',
+       TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(`produit`.`couleurs`, ',', `rang`.`n`), ',', -1)),
+       0
+  FROM `produit`
+INNER JOIN (
+          SELECT 1 AS `n`
+UNION ALL SELECT 2
+UNION ALL SELECT 3
+UNION ALL SELECT 4
+UNION ALL SELECT 5
+UNION ALL SELECT 6
+) AS `rang` ON `rang`.`n` <= 1 + LENGTH(`produit`.`couleurs`) - LENGTH(REPLACE(`produit`.`couleurs`, ',', ''))
+WHERE `produit`.`id` NOT IN (SELECT `produit_id` FROM `option_groupe`);
+
+--
+-- Migration du stock : l'ancien stock du produit est réparti à parts égales
+-- entre ses variantes (le reste va à la première), puis la colonne disparaît.
+--
+UPDATE `variante`
+INNER JOIN `produit` ON `produit`.`id` = `variante`.`produit_id`
+INNER JOIN (
+  SELECT `produit_id`, COUNT(*) AS `nombre`, MIN(`id`) AS `premiere`
+    FROM `variante`
+GROUP BY `produit_id`
+) AS `total` ON `total`.`produit_id` = `variante`.`produit_id`
+SET `variante`.`stock` = `produit`.`stock` DIV `total`.`nombre`
+    + IF(`variante`.`id` = `total`.`premiere`, `produit`.`stock` MOD `total`.`nombre`, 0);
+
+ALTER TABLE `produit` DROP COLUMN `stock`;
+
+-- --------------------------------------------------------
+
+--
 -- Structure de la table `utilisateur`
 --
 -- mot_de_passe contient le hash bcrypt (60 caractères), jamais le mot de
@@ -269,6 +345,7 @@ CREATE TABLE `ligne_commande` (
   `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   `commande_id` int(10) UNSIGNED NOT NULL,
   `produit_id` smallint(5) UNSIGNED DEFAULT NULL,
+  `variante_id` int(10) UNSIGNED DEFAULT NULL,
   `titre` varchar(160) NOT NULL,
   `prix_unitaire` decimal(7,2) NOT NULL,
   `quantite` smallint(5) UNSIGNED NOT NULL,
@@ -277,8 +354,10 @@ CREATE TABLE `ligne_commande` (
   PRIMARY KEY (`id`),
   KEY `idx_ligne_commande_commande` (`commande_id`),
   KEY `idx_ligne_commande_produit` (`produit_id`),
+  KEY `idx_ligne_commande_variante` (`variante_id`),
   CONSTRAINT `fk_ligne_commande_commande` FOREIGN KEY (`commande_id`) REFERENCES `commande` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_ligne_commande_produit` FOREIGN KEY (`produit_id`) REFERENCES `produit` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+  CONSTRAINT `fk_ligne_commande_produit` FOREIGN KEY (`produit_id`) REFERENCES `produit` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_ligne_commande_variante` FOREIGN KEY (`variante_id`) REFERENCES `variante` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -293,14 +372,17 @@ CREATE TABLE `ligne_commande` (
 CREATE TABLE `mouvement_stock` (
   `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   `produit_id` smallint(5) UNSIGNED DEFAULT NULL,
+  `variante_id` int(10) UNSIGNED DEFAULT NULL,
   `commande_id` int(10) UNSIGNED NOT NULL,
   `type` varchar(20) NOT NULL,
   `quantite` smallint(6) NOT NULL,
   `date_creation` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `idx_mouvement_stock_produit` (`produit_id`),
+  KEY `idx_mouvement_stock_variante` (`variante_id`),
   KEY `idx_mouvement_stock_commande` (`commande_id`),
   CONSTRAINT `fk_mouvement_stock_produit` FOREIGN KEY (`produit_id`) REFERENCES `produit` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_mouvement_stock_variante` FOREIGN KEY (`variante_id`) REFERENCES `variante` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `fk_mouvement_stock_commande` FOREIGN KEY (`commande_id`) REFERENCES `commande` (`id`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

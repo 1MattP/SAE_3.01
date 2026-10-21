@@ -83,6 +83,39 @@ final class AdminProduitController
         Response::json(['supprime' => true]);
     }
 
+    public function stocks(Request $requete): void
+    {
+        $this->verifierAdministrateur();
+
+        $corps   = $requete->corps();
+        $id      = (int) ($corps['id'] ?? 0);
+        $demande = $corps['stocks'] ?? null;
+
+        if ($this->produits->trouverParId($id) === null) {
+            Response::erreur('Produit introuvable.', 404);
+        }
+
+        if (!is_array($demande)) {
+            Response::erreur('Stocks invalides.', 400);
+        }
+
+        $stocks = [];
+
+        for ($i = 0; $i < count($demande); $i++) {
+            $stock = (int) ($demande[$i]['stock'] ?? -1);
+
+            if ($stock < 0 || $stock > 65535) {
+                Response::erreur('Chaque stock doit être compris entre 0 et 65 535.', 400);
+            }
+
+            $stocks[] = ['id' => (int) ($demande[$i]['id'] ?? 0), 'stock' => $stock];
+        }
+
+        $this->produits->modifierStocks($id, $stocks);
+
+        Response::json(['produit' => ['id' => $id]]);
+    }
+
     private function verifierAdministrateur(): void
     {
         if (($_SESSION['administrateur'] ?? null) === null) {
@@ -101,7 +134,6 @@ final class AdminProduitController
         $extras            = $corps['images'] ?? [];
         $texteOptions      = trim((string) ($corps['options'] ?? ''));
         $prix              = (float) str_replace(',', '.', (string) ($corps['prix'] ?? '0'));
-        $stock             = (int) ($corps['stock'] ?? 0);
         $categorieId       = (int) ($corps['categorieId'] ?? 0);
 
         if ($titre === '' || strlen($titre) > 160) {
@@ -122,10 +154,6 @@ final class AdminProduitController
 
         if ($prix <= 0 || $prix >= 100000) {
             Response::erreur('Le prix doit être supérieur à 0 et inférieur à 100 000.', 400);
-        }
-
-        if ($stock < 0 || $stock > 65535) {
-            Response::erreur('Le stock doit être compris entre 0 et 65 535.', 400);
         }
 
         if ($couleurs === '' || strlen($couleurs) > 120) {
@@ -154,6 +182,16 @@ final class AdminProduitController
 
         $options = $this->lireOptions($texteOptions);
 
+        $combinaisons = count($this->produits->listerCouleurs($couleurs));
+
+        for ($i = 0; $i < count($options); $i++) {
+            $combinaisons *= count($options[$i]['valeurs']);
+        }
+
+        if ($combinaisons > 100) {
+            Response::erreur('Ce produit aurait ' . $combinaisons . ' variantes (options × couleurs) : 100 maximum.', 400);
+        }
+
         $categories = $this->produits->categories();
         $existe     = false;
 
@@ -181,7 +219,6 @@ final class AdminProduitController
             'image'             => $image,
             'images'            => $images,
             'options'           => $options,
-            'stock'             => $stock,
             'categorieId'       => $categorieId,
         ];
     }
