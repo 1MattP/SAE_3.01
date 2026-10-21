@@ -77,6 +77,7 @@ final class ProduitModel
                        produit.description,
                        produit.description_longue,
                        produit.prix,
+                       produit.couleurs,
                        produit.stock,
                        CASE WHEN produit.stock = 0 THEN 'epuise'
                             WHEN produit.stock <= :seuil THEN 'bientot_epuise'
@@ -154,7 +155,13 @@ final class ProduitModel
         }
 
         $images          = $this->images($id);
-        $ligne['images'] = array_slice($images, 1);
+        $ligne['images'] = [];
+
+        for ($i = 1; $i < count($images); $i++) {
+            $ligne['images'][] = $images[$i];
+        }
+
+        $ligne['options'] = $this->texteOptions($this->options($id));
 
         return $ligne;
     }
@@ -185,6 +192,7 @@ final class ProduitModel
         $id = (int) $this->pdo->lastInsertId();
 
         $this->enregistrerImages($id, $produit['image'], $produit['images']);
+        $this->enregistrerOptions($id, $produit['options']);
 
         $this->pdo->commit();
 
@@ -213,6 +221,10 @@ final class ProduitModel
         $requetePreparee->execute();
 
         $this->enregistrerImages($id, $produit['image'], $produit['images']);
+
+        if ($this->texteOptions($this->options($id)) !== $this->texteOptions($produit['options'])) {
+            $this->enregistrerOptions($id, $produit['options']);
+        }
 
         $this->pdo->commit();
     }
@@ -258,6 +270,132 @@ final class ProduitModel
             $requetePreparee->bindValue(':url',      $url,      PDO::PARAM_STR);
             $requetePreparee->bindValue(':position', $position, PDO::PARAM_INT);
             $requetePreparee->execute();
+        }
+    }
+
+    public function listerCouleurs(string $couleurs): array
+    {
+        $codes = explode(',', $couleurs);
+        $liste = [];
+
+        for ($i = 0; $i < count($codes); $i++) {
+            if (trim($codes[$i]) !== '') {
+                $liste[] = trim($codes[$i]);
+            }
+        }
+
+        return $liste;
+    }
+
+    public function options(int $produit): array
+    {
+        $sql = 'SELECT option_groupe.id AS groupe_id,
+                       option_groupe.nom,
+                       option_valeur.id AS valeur_id,
+                       option_valeur.libelle
+                  FROM option_groupe
+            INNER JOIN option_valeur ON option_valeur.groupe_id = option_groupe.id
+                 WHERE option_groupe.produit_id = :produit
+              ORDER BY option_groupe.id, option_valeur.id';
+
+        $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':produit', $produit, PDO::PARAM_INT);
+        $requetePreparee->execute();
+
+        $lignes = $requetePreparee->fetchAll();
+        $groupes = [];
+
+        for ($i = 0; $i < count($lignes); $i++) {
+            $dernier = count($groupes) - 1;
+
+            if ($dernier < 0 || $groupes[$dernier]['id'] !== (int) $lignes[$i]['groupe_id']) {
+                $groupes[] = ['id' => (int) $lignes[$i]['groupe_id'], 'nom' => $lignes[$i]['nom'], 'valeurs' => []];
+                $dernier++;
+            }
+
+            $groupes[$dernier]['valeurs'][] = [
+                'id'         => (int) $lignes[$i]['valeur_id'],
+                'libelle'    => $lignes[$i]['libelle'],
+            ];
+        }
+
+        return $groupes;
+    }
+
+    public function choisirOptions(int $produit, array $choix): ?string
+    {
+        $groupes = $this->options($produit);
+
+        if (count($choix) !== count($groupes)) {
+            return null;
+        }
+
+        $textes = [];
+
+        for ($i = 0; $i < count($groupes); $i++) {
+            $trouve = null;
+
+            for ($j = 0; $j < count($groupes[$i]['valeurs']); $j++) {
+                if (in_array($groupes[$i]['valeurs'][$j]['id'], $choix, true)) {
+                    $trouve = $groupes[$i]['valeurs'][$j];
+                }
+            }
+
+            if ($trouve === null) {
+                return null;
+            }
+
+            $textes[] = $groupes[$i]['nom'] . ' : ' . $trouve['libelle'];
+        }
+
+        return implode(', ', $textes);
+    }
+
+    public function texteOptions(array $groupes): string
+    {
+        $lignes = [];
+
+        for ($i = 0; $i < count($groupes); $i++) {
+            $valeurs = [];
+
+            for ($j = 0; $j < count($groupes[$i]['valeurs']); $j++) {
+                $valeurs[] = $groupes[$i]['valeurs'][$j]['libelle'];
+            }
+
+            $lignes[] = $groupes[$i]['nom'] . ' : ' . implode(', ', $valeurs);
+        }
+
+        return implode("\n", $lignes);
+    }
+
+    private function enregistrerOptions(int $id, array $groupes): void
+    {
+        $sql = 'DELETE FROM option_groupe WHERE produit_id = :produit';
+
+        $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':produit', $id, PDO::PARAM_INT);
+        $requetePreparee->execute();
+
+        $sqlGroupe = 'INSERT INTO option_groupe (produit_id, nom)
+                      VALUES (:produit, :nom)';
+        $sqlValeur = 'INSERT INTO option_valeur (groupe_id, libelle)
+                      VALUES (:groupe, :libelle)';
+
+        $insertionGroupe = $this->pdo->prepare($sqlGroupe);
+        $insertionValeur = $this->pdo->prepare($sqlValeur);
+
+        for ($i = 0; $i < count($groupes); $i++) {
+            $insertionGroupe->bindValue(':produit',  $id,                  PDO::PARAM_INT);
+            $insertionGroupe->bindValue(':nom',      $groupes[$i]['nom'],  PDO::PARAM_STR);
+            $insertionGroupe->execute();
+
+            $groupe = (int) $this->pdo->lastInsertId();
+
+            for ($j = 0; $j < count($groupes[$i]['valeurs']); $j++) {
+                $insertionValeur->bindValue(':groupe',     $groupe,                                      PDO::PARAM_INT);
+                $insertionValeur->bindValue(':libelle',    $groupes[$i]['valeurs'][$j]['libelle'],       PDO::PARAM_STR);
+                $insertionValeur->execute();
+            }
         }
     }
 

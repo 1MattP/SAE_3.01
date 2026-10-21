@@ -10,6 +10,9 @@ import template from "./template.html?raw";
 let M = {
   produit: null,
   selectedImage: null,
+  selection: [],
+  couleur: "",
+  optionsTexte: "",
   message: null,
 };
 
@@ -23,9 +26,44 @@ C.charger = async function (urlName) {
     let data = await ProduitData.fetchOne(urlName);
     M.produit = data.produit;
     M.selectedImage = M.produit.images[0];
+    M.selection = M.produit.options.map(function (groupe) {
+      return `${groupe.valeurs[0].id}`;
+    });
+    M.couleur = "";
+    if (M.produit.couleurs.length > 0) {
+      M.couleur = M.produit.couleurs[0];
+    }
+    C.calculer();
   } catch (erreur) {
     M.message = { type: "erreur", texte: `Impossible d'afficher le produit : ${erreur.message}` };
   }
+};
+
+C.calculer = function () {
+  let textes = [];
+
+  for (let i = 0; i < M.produit.options.length; i++) {
+    let groupe = M.produit.options[i];
+    let valeur = groupe.valeurs.find(function (item) {
+      return `${item.id}` === M.selection[i];
+    });
+
+    textes.push(`${groupe.nom} : ${valeur.libelle}`);
+  }
+
+  M.optionsTexte = textes.join(", ");
+};
+
+C.handler_choisirOption = function (groupe, valeur) {
+  M.selection[groupe] = valeur;
+  C.calculer();
+  V.rafraichir();
+};
+
+C.handler_choisirCouleur = function (code) {
+  M.couleur = code;
+  C.calculer();
+  V.rafraichir();
 };
 
 C.handler_choisirImage = function (ev) {
@@ -36,8 +74,9 @@ C.handler_choisirImage = function (ev) {
 C.handler_ajouterAuPanier = async function () {
   try {
     let lines = PanierData.load();
+    let cle = M.produit.urlName + "|" + M.selection.join(",") + "|" + M.couleur;
     let line = lines.find(function (item) {
-      return item.urlName === M.produit.urlName;
+      return item.cle === cle;
     });
 
     let wanted = 1;
@@ -48,7 +87,14 @@ C.handler_ajouterAuPanier = async function () {
     let data = await StockData.verify([{ urlName: M.produit.urlName, quantity: wanted }]);
     let result = data.lines[0];
 
-    if (result.quantity < wanted) {
+    let dejaDansPanier = 0;
+    for (let item of lines) {
+      if (item.urlName === M.produit.urlName) {
+        dejaDansPanier += item.quantity;
+      }
+    }
+
+    if (result.quantity < wanted || dejaDansPanier + 1 > result.stock) {
       let texte = `${M.produit.titre} est épuisé.`;
       if (result.stock > 0) {
         texte = `Stock insuffisant : il ne reste que ${result.stock} exemplaire(s) de ${M.produit.titre}.`;
@@ -60,6 +106,9 @@ C.handler_ajouterAuPanier = async function () {
           urlName: M.produit.urlName,
           titre: M.produit.titre,
           prix: M.produit.prix,
+          options: M.selection,
+          couleur: M.couleur,
+          optionsTexte: M.optionsTexte,
           image: M.produit.images[0],
           quantity: 1,
           stock: result.stock,
@@ -135,9 +184,15 @@ V.createPageFragment = function () {
         mainImage: M.selectedImage,
         etatStock: M.produit.etatStock,
         images: M.produit.images,
+        options: M.produit.options,
+        selection: M.selection,
+        couleurs: M.produit.couleurs,
+        couleur: M.couleur,
       },
       {
         thumbnail: C.handler_choisirImage,
+        option: C.handler_choisirOption,
+        couleur: C.handler_choisirCouleur,
         addToCart: C.handler_ajouterAuPanier,
       }
     )

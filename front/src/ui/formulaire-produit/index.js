@@ -18,6 +18,7 @@ let FormulaireProduitView = {
       image2: data.values.images[0],
       image3: data.values.images[1],
       image4: data.values.images[2],
+      options: data.values.options,
     });
   },
 
@@ -51,6 +52,7 @@ let FormulaireProduitView = {
         categorieId: form.elements.categorieId.value,
         couleurs: form.elements.couleurs.value,
         image: form.elements.image.value,
+        options: form.elements.options.value,
         images: [form.elements.image2.value, form.elements.image3.value, form.elements.image4.value],
       });
     });

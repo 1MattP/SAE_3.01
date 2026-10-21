@@ -33,6 +33,7 @@ final class CommandeController
 
         $lignes = [];
         $somme  = 0;
+        $totaux = [];
 
         for ($i = 0; $i < count($demandes); $i++) {
             $demande = $demandes[$i];
@@ -54,9 +55,40 @@ final class CommandeController
                 Response::erreur("Un produit de votre panier n'existe plus.", 400);
             }
 
+            $id    = (int) $produit['id'];
             $stock = (int) $produit['stock'];
+            $choix = $demande['options'] ?? [];
 
-            if ($quantite > $stock) {
+            if (!is_array($choix)) {
+                Response::erreur('Votre panier est invalide.', 400);
+            }
+
+            $ids = [];
+
+            for ($k = 0; $k < count($choix); $k++) {
+                $ids[] = (int) $choix[$k];
+            }
+
+            $texte = $this->produits->choisirOptions($id, $ids);
+
+            if ($texte === null) {
+                Response::erreur('Les options de ' . $produit['titre'] . ' ont changé : retirez-le du panier puis ajoutez-le à nouveau.', 409);
+            }
+
+            $couleurs = $this->produits->listerCouleurs($produit['couleurs']);
+            $couleur  = (string) ($demande['couleur'] ?? '');
+
+            if (count($couleurs) > 0 && !in_array($couleur, $couleurs, true)) {
+                Response::erreur('La couleur de ' . $produit['titre'] . ' est invalide : retirez-le du panier puis ajoutez-le à nouveau.', 409);
+            }
+
+            if (count($couleurs) === 0) {
+                $couleur = '';
+            }
+
+            $totaux[$id] = ($totaux[$id] ?? 0) + $quantite;
+
+            if ($totaux[$id] > $stock) {
                 $message = $produit['titre'] . ' est épuisé.';
 
                 if ($stock > 0) {
@@ -70,8 +102,10 @@ final class CommandeController
             $somme += $prix * $quantite;
 
             $lignes[] = [
-                'produit'  => (int) $produit['id'],
+                'produit'  => $id,
                 'titre'    => $produit['titre'],
+                'options'  => $texte,
+                'couleur'  => $couleur,
                 'prix'     => $prix,
                 'quantite' => $quantite,
                 'total'    => round($prix * $quantite, 2),

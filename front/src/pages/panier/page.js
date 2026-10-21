@@ -27,6 +27,9 @@ C.enregistrer = function () {
       urlName: line.urlName,
       titre: line.titre,
       prix: line.prix,
+      options: line.options,
+      couleur: line.couleur,
+      optionsTexte: line.optionsTexte,
       image: line.image,
       quantity: line.quantity,
       stock: line.stock,
@@ -68,7 +71,7 @@ C.synchroniser = async function () {
 
 C.handler_augmenterQuantite = async function (ev) {
   let line = M.lines.find(function (item) {
-    return item.urlName === ev.target.dataset.urlName;
+    return item.cle === ev.target.dataset.cle;
   });
 
   line.quantity += 1;
@@ -80,7 +83,7 @@ C.handler_augmenterQuantite = async function (ev) {
 
 C.handler_diminuerQuantite = function (ev) {
   let line = M.lines.find(function (item) {
-    return item.urlName === ev.target.dataset.urlName;
+    return item.cle === ev.target.dataset.cle;
   });
 
   if (line.quantity > 1) {
@@ -95,7 +98,7 @@ C.handler_diminuerQuantite = function (ev) {
 
 C.handler_supprimerLigne = function (ev) {
   M.lines = M.lines.filter(function (item) {
-    return item.urlName !== ev.target.dataset.urlName;
+    return item.cle !== ev.target.dataset.cle;
   });
 
   M.message = null;

@@ -2,6 +2,7 @@ import { genericRenderer, htmlToFragment } from "../../lib/utils.js";
 import { formaterPrix, formaterImage } from "../../lib/format.js";
 import template from "./template.html?raw";
 import templateLigne from "./ligne.html?raw";
+import templatePastille from "./pastille.html?raw";
 import templateVide from "./vide.html?raw";
 
 let PanierView = {
@@ -18,14 +19,21 @@ let PanierView = {
     if (lines.length > 0) {
       items = lines.map(function (line) {
         let item = htmlToFragment(genericRenderer(templateLigne, {
-          urlName: line.urlName,
+          cle: line.cle,
           link: "/produit/" + line.urlName,
           titre: line.titre,
+          options: line.optionsTexte,
           image: formaterImage(line.image),
           prix: formaterPrix(line.prix),
           quantity: line.quantity,
           total: formaterPrix(line.total),
         }));
+        let slot = item.querySelector('slot[name="couleur"]');
+        if (line.couleur === "") {
+          slot.remove();
+        } else {
+          slot.replaceWith(htmlToFragment(genericRenderer(templatePastille, { couleur: line.couleur })));
+        }
         item.querySelector('[data-action="minus"]').disabled = line.quantity === 1;
         item.querySelector('[data-action="plus"]').disabled = !line.canIncrease;
         return item;

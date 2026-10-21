@@ -7,7 +7,20 @@ PanierData.load = function () {
     return [];
   }
 
-  return JSON.parse(saved);
+  let lines = JSON.parse(saved);
+
+  for (let line of lines) {
+    if (line.options === undefined) {
+      line.options = [];
+      line.optionsTexte = "";
+    }
+    if (line.couleur === undefined) {
+      line.couleur = "";
+    }
+    line.cle = line.urlName + "|" + line.options.join(",") + "|" + line.couleur;
+  }
+
+  return lines;
 };
 
 PanierData.save = function (lines) {

@@ -99,6 +99,7 @@ final class AdminProduitController
         $couleurs          = trim((string) ($corps['couleurs'] ?? ''));
         $image             = trim((string) ($corps['image'] ?? ''));
         $extras            = $corps['images'] ?? [];
+        $texteOptions      = trim((string) ($corps['options'] ?? ''));
         $prix              = (float) str_replace(',', '.', (string) ($corps['prix'] ?? '0'));
         $stock             = (int) ($corps['stock'] ?? 0);
         $categorieId       = (int) ($corps['categorieId'] ?? 0);
@@ -151,6 +152,8 @@ final class AdminProduitController
             $images[] = $url;
         }
 
+        $options = $this->lireOptions($texteOptions);
+
         $categories = $this->produits->categories();
         $existe     = false;
 
@@ -177,8 +180,71 @@ final class AdminProduitController
             'couleurs'          => $couleurs,
             'image'             => $image,
             'images'            => $images,
+            'options'           => $options,
             'stock'             => $stock,
             'categorieId'       => $categorieId,
         ];
+    }
+
+    private function lireOptions(string $texte): array
+    {
+        if ($texte === '') {
+            return [];
+        }
+
+        $lignes  = explode("\n", $texte);
+        $groupes = [];
+
+        if (count($lignes) > 5) {
+            Response::erreur('Un produit a 5 options maximum.', 400);
+        }
+
+        for ($i = 0; $i < count($lignes); $i++) {
+            $morceaux = explode(':', $lignes[$i], 2);
+            $nom      = trim($morceaux[0]);
+
+            if (count($morceaux) !== 2 || $nom === '' || strlen($nom) > 40) {
+                Response::erreur('Chaque option s\'écrit « Nom : valeur, valeur » (nom de 40 caractères maximum).', 400);
+            }
+
+            for ($k = 0; $k < count($groupes); $k++) {
+                if ($groupes[$k]['nom'] === $nom) {
+                    Response::erreur('L\'option « ' . $nom . ' » est écrite deux fois.', 400);
+                }
+            }
+
+            $valeurs = $this->lireValeurs(explode(',', $morceaux[1]), $nom);
+
+            $groupes[] = ['nom' => $nom, 'valeurs' => $valeurs];
+        }
+
+        return $groupes;
+    }
+
+    private function lireValeurs(array $morceaux, string $nom): array
+    {
+        if (count($morceaux) > 10) {
+            Response::erreur('L\'option « ' . $nom . ' » a 10 valeurs maximum.', 400);
+        }
+
+        $valeurs = [];
+
+        for ($j = 0; $j < count($morceaux); $j++) {
+            $libelle = trim($morceaux[$j]);
+
+            if ($libelle === '' || strlen($libelle) > 40) {
+                Response::erreur('Chaque valeur de « ' . $nom . ' » doit avoir un nom de 40 caractères maximum.', 400);
+            }
+
+            for ($k = 0; $k < count($valeurs); $k++) {
+                if ($valeurs[$k]['libelle'] === $libelle) {
+                    Response::erreur('La valeur « ' . $libelle . ' » est écrite deux fois dans « ' . $nom . ' ».', 400);
+                }
+            }
+
+            $valeurs[] = ['libelle' => $libelle];
+        }
+
+        return $valeurs;
     }
 }

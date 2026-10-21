@@ -41,6 +41,7 @@ C.charger = async function (id) {
       couleurs: "",
       image: "",
       images: ["", "", ""],
+      options: "",
       categorieId: M.categories[0].id,
     };
 

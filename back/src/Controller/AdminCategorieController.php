@@ -97,15 +97,15 @@ final class AdminCategorieController
         $libelle     = trim((string) ($corps['libelle'] ?? ''));
         $description = trim((string) ($corps['description'] ?? ''));
 
-        if ($libelle === '' || mb_strlen($libelle) > 40) {
+        if ($libelle === '' || strlen($libelle) > 40) {
             Response::erreur('Le nom est obligatoire (40 caractères maximum).', 400);
         }
 
-        if (mb_strtolower($libelle) === 'tout') {
+        if ($libelle === 'Tout') {
             Response::erreur('Le nom « Tout » est réservé au catalogue.', 400);
         }
 
-        if ($description === '' || mb_strlen($description) > 255) {
+        if ($description === '' || strlen($description) > 255) {
             Response::erreur('La description est obligatoire (255 caractères maximum).', 400);
         }
 
