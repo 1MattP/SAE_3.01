@@ -4,7 +4,10 @@
       <h2 class="text-body-lg font-bold">{{numero}}</h2>
       <p class="text-caption text-text-secondary">Passée le {{date}}</p>
     </div>
-    <p class="text-body-sm font-semibold">{{statut}}</p>
+    <div class="flex items-center gap-4">
+      <p class="text-body-sm font-semibold">{{statut}}</p>
+      <button type="button" data-action="reorder" data-numero="{{numero}}" class="h-9 rounded-md border border-border-default px-4 text-caption font-semibold hover:bg-surface-hover">Commander à nouveau</button>
+    </div>
   </div>
 
   <div>

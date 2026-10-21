@@ -71,6 +71,28 @@ final class CommandeModel
         return $requetePreparee->fetchAll();
     }
 
+    public function lignesParNumero(string $numero, int $utilisateur): ?array
+    {
+        $sql = 'SELECT ligne_commande.titre,
+                       ligne_commande.options,
+                       ligne_commande.variante_id,
+                       ligne_commande.prix_unitaire AS prix,
+                       ligne_commande.quantite
+                  FROM ligne_commande
+            INNER JOIN commande ON commande.id = ligne_commande.commande_id
+                 WHERE commande.numero = :numero AND commande.utilisateur_id = :utilisateur
+              ORDER BY ligne_commande.id';
+
+        $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':numero',      $numero,      PDO::PARAM_STR);
+        $requetePreparee->bindValue(':utilisateur', $utilisateur, PDO::PARAM_INT);
+        $requetePreparee->execute();
+
+        $lignes = $requetePreparee->fetchAll();
+
+        return count($lignes) === 0 ? null : $lignes;
+    }
+
     public function trouverParNumero(string $numero, int $utilisateur): ?array
     {
         $sql = 'SELECT id, numero, statut, total, date_creation AS date

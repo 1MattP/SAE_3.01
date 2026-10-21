@@ -14,7 +14,7 @@ let DetailCommandeView = {
     });
   },
 
-  dom: function (data) {
+  dom: function (data, actions) {
     let fragment = htmlToFragment(DetailCommandeView.html(data));
 
     let lines = data.lignes.map(function (ligne) {
@@ -36,6 +36,8 @@ let DetailCommandeView = {
       return item;
     });
     fragment.querySelector('slot[name="lines"]').replaceWith(...lines);
+
+    fragment.querySelector('[data-action="reorder"]').addEventListener("click", actions.reorder);
 
     return fragment;
   },

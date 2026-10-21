@@ -38,7 +38,7 @@ let DetailProduitView = {
     );
     fragment.querySelector('slot[name="stock"]').replaceWith(BadgeStockView.dom({ etat: data.etatStock }));
 
-    root.querySelector('[data-action="addToCart"]').disabled = data.etatStock === "epuise";
+    root.querySelector('[data-action="addToCart"]').disabled = data.bloque;
 
     root.addEventListener("click", function (ev) {
       let button = ev.target.closest("[data-action]");

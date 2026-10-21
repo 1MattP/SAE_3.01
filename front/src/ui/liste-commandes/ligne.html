@@ -3,5 +3,8 @@
     <a href="{{lien}}" data-link class="text-body-sm font-semibold underline">{{numero}}</a>
     <p class="text-caption text-text-secondary">{{date}} · {{articles}} article(s) · {{statut}}</p>
   </div>
-  <p class="text-body-sm font-bold">{{total}}</p>
+  <div class="flex items-center gap-4">
+    <p class="text-body-sm font-bold">{{total}}</p>
+    <button type="button" data-action="reorder" data-numero="{{numero}}" class="h-9 rounded-md border border-border-default px-4 text-caption font-semibold hover:bg-surface-hover">Commander à nouveau</button>
+  </div>
 </div>

@@ -16,6 +16,10 @@ CommandesData.fetchPage = async function (page, filtres) {
   return getRequest(uri);
 };
 
+CommandesData.reorder = async function (numero) {
+  return postRequest("commandes/recommander", { numero });
+};
+
 CommandesData.fetchOne = async function (numero) {
   return getRequest(`commande?numero=${numero}`);
 };
