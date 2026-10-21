@@ -1,5 +1,6 @@
 import { AuthData } from "../../data/auth.js";
 import { CommandesData } from "../../data/commandes.js";
+import { PanierData } from "../../data/panier.js";
 import { htmlToFragment } from "../../lib/utils.js";
 import { CompteNavView } from "../../ui/compte-nav/index.js";
 import { FiltresCommandesView } from "../../ui/filtres-commandes/index.js";
@@ -41,6 +42,22 @@ C.handler_changerPage = async function (page) {
   try {
     await C.charger(page);
     M.message = null;
+  } catch (erreur) {
+    M.message = { type: "erreur", texte: erreur.message };
+  }
+
+  V.rafraichir();
+};
+
+C.handler_commanderANouveau = async function (ev) {
+  try {
+    let data = await CommandesData.reorder(ev.target.dataset.numero);
+    let notes = data.notes.concat(PanierData.ajouter(data.lignes));
+
+    M.message = { type: "succes", texte: data.message };
+    if (notes.length > 0) {
+      M.message = { type: "erreur", texte: data.message + " " + notes.join(" ") };
+    }
   } catch (erreur) {
     M.message = { type: "erreur", texte: erreur.message };
   }
@@ -120,7 +137,7 @@ V.createPageFragment = function () {
     FiltresCommandesView.dom(M.filtres, { submit: C.handler_filtrer })
   );
   pageFragment.querySelector('slot[name="liste"]').replaceWith(
-    ListeCommandesView.dom({ titre: "", commandes: M.liste.commandes })
+    ListeCommandesView.dom({ titre: "", commandes: M.liste.commandes }, { reorder: C.handler_commanderANouveau })
   );
   pageFragment.querySelector('slot[name="pagination"]').replaceWith(
     PaginationView.dom(M.liste, { surPage: C.handler_changerPage })

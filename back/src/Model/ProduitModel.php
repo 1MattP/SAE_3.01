@@ -448,6 +448,29 @@ final class ProduitModel
         return $ligne === false ? null : $ligne;
     }
 
+    public function trouverVarianteParId(int $id): ?array
+    {
+        $sql = 'SELECT variante.id,
+                       variante.cle,
+                       variante.couleur,
+                       variante.stock,
+                       produit.id AS produit,
+                       produit.nom_url AS urlName,
+                       produit.titre,
+                       produit.prix
+                  FROM variante
+            INNER JOIN produit ON produit.id = variante.produit_id
+                 WHERE variante.id = :id';
+
+        $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':id', $id, PDO::PARAM_INT);
+        $requetePreparee->execute();
+
+        $ligne = $requetePreparee->fetch();
+
+        return $ligne === false ? null : $ligne;
+    }
+
     public function modifierStocks(int $produit, array $stocks): void
     {
         $sql = 'UPDATE variante SET stock = :stock WHERE id = :id AND produit_id = :produit';

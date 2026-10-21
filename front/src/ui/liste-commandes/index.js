@@ -9,7 +9,7 @@ let ListeCommandesView = {
     return genericRenderer(template, { titre: data.titre });
   },
 
-  dom: function (data) {
+  dom: function (data, actions) {
     let fragment = htmlToFragment(ListeCommandesView.html(data));
     let commandes = data.commandes;
 
@@ -17,7 +17,7 @@ let ListeCommandesView = {
 
     if (commandes.length > 0) {
       lines = commandes.map(function (commande) {
-        return htmlToFragment(genericRenderer(templateLigne, {
+        let ligne = htmlToFragment(genericRenderer(templateLigne, {
           numero: commande.numero,
           lien: "/compte/commandes/" + commande.numero,
           date: formaterDate(commande.date),
@@ -25,6 +25,15 @@ let ListeCommandesView = {
           statut: commande.statut,
           total: formaterPrix(commande.total),
         }));
+
+        let bouton = ligne.querySelector('[data-action="reorder"]');
+        if (actions === undefined) {
+          bouton.remove();
+        } else {
+          bouton.addEventListener("click", actions.reorder);
+        }
+
+        return ligne;
       });
     }
     fragment.querySelector('slot[name="lines"]').replaceWith(...lines);

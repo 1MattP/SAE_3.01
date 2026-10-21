@@ -231,6 +231,102 @@ final class CommandeController
         Response::json(['commande' => $commande]);
     }
 
+    public function reorder(Request $requete): void
+    {
+        $utilisateur = $this->verifierConnexion();
+
+        $numero = (string) ($requete->corps()['numero'] ?? '');
+
+        if ($numero === '' || strlen($numero) > 20) {
+            Response::erreur('Numéro de commande invalide.', 400);
+        }
+
+        $anciennes = $this->commandes->lignesParNumero($numero, $utilisateur);
+
+        if ($anciennes === null) {
+            Response::erreur('Commande introuvable.', 404);
+        }
+
+        $lignes = [];
+        $notes  = [];
+
+        for ($i = 0; $i < count($anciennes); $i++) {
+            $ancienne = $anciennes[$i];
+            $nom      = $ancienne['titre'];
+
+            if ($ancienne['options'] !== '') {
+                $nom .= ' (' . $ancienne['options'] . ')';
+            }
+
+            $variante = null;
+
+            if ($ancienne['variante_id'] !== null) {
+                $variante = $this->produits->trouverVarianteParId((int) $ancienne['variante_id']);
+            }
+
+            if ($variante === null) {
+                $notes[] = $nom . ' : ce produit ou cette variante n\'est plus proposé.';
+                continue;
+            }
+
+            $stock    = (int) $variante['stock'];
+            $quantite = (int) $ancienne['quantite'];
+
+            if ($stock === 0) {
+                $notes[] = $nom . ' : épuisé.';
+                continue;
+            }
+
+            if ($stock < $quantite) {
+                $notes[]  = $nom . ' : quantité ramenée à ' . $stock . ' (stock disponible).';
+                $quantite = $stock;
+            }
+
+            if (abs((float) $variante['prix'] - (float) $ancienne['prix']) > 0.001) {
+                $notes[] = $nom . ' : le prix est passé de ' . number_format((float) $ancienne['prix'], 2, ',', ' ') . ' € à ' . number_format((float) $variante['prix'], 2, ',', ' ') . ' €.';
+            }
+
+            $images = $this->produits->images((int) $variante['produit']);
+
+            $lignes[] = [
+                'urlName'      => $variante['urlName'],
+                'titre'        => $variante['titre'],
+                'prix'         => $variante['prix'],
+                'image'        => $images[0] ?? '',
+                'options'      => $variante['cle'] === '' ? [] : explode(',', $variante['cle']),
+                'optionsTexte' => $this->libelleVariante((int) $variante['produit'], (int) $variante['id']),
+                'couleur'      => $variante['couleur'],
+                'quantity'     => $quantite,
+                'stock'        => $stock,
+            ];
+        }
+
+        $message = count($lignes) . ' article(s) de la commande ' . $numero . ' ajouté(s) à votre panier.';
+
+        if (count($lignes) === 0) {
+            $message = 'Aucun article de la commande ' . $numero . " n'a pu être ajouté à votre panier.";
+        }
+
+        Response::json([
+            'lignes'  => $lignes,
+            'message' => $message,
+            'notes'   => $notes,
+        ]);
+    }
+
+    private function libelleVariante(int $produit, int $variante): string
+    {
+        $variantes = $this->produits->variantesAvecLibelle($produit);
+
+        for ($i = 0; $i < count($variantes); $i++) {
+            if ($variantes[$i]['id'] === $variante) {
+                return $variantes[$i]['libelle'];
+            }
+        }
+
+        return '';
+    }
+
     private function verifierConnexion(): int
     {
         if (($_SESSION['utilisateur'] ?? null) === null) {

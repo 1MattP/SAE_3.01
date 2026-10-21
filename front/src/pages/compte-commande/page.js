@@ -1,5 +1,6 @@
 import { AuthData } from "../../data/auth.js";
 import { CommandesData } from "../../data/commandes.js";
+import { PanierData } from "../../data/panier.js";
 import { htmlToFragment } from "../../lib/utils.js";
 import { CompteNavView } from "../../ui/compte-nav/index.js";
 import { DetailCommandeView } from "../../ui/detail-commande/index.js";
@@ -19,6 +20,22 @@ C.charger = async function (numero) {
   let data = await CommandesData.fetchOne(numero);
   M.commande = data.commande;
   M.connecte = true;
+};
+
+C.handler_commanderANouveau = async function (ev) {
+  try {
+    let data = await CommandesData.reorder(ev.target.dataset.numero);
+    let notes = data.notes.concat(PanierData.ajouter(data.lignes));
+
+    M.message = { type: "succes", texte: data.message };
+    if (notes.length > 0) {
+      M.message = { type: "erreur", texte: data.message + " " + notes.join(" ") };
+    }
+  } catch (erreur) {
+    M.message = { type: "erreur", texte: erreur.message };
+  }
+
+  V.rafraichir();
 };
 
 C.handler_deconnecter = async function () {
@@ -87,7 +104,7 @@ V.createPageFragment = function () {
   pageFragment.querySelector('slot[name="nav"]').replaceWith(
     CompteNavView.dom({ logout: C.handler_deconnecter })
   );
-  pageFragment.querySelector('slot[name="detail"]').replaceWith(DetailCommandeView.dom(M.commande));
+  pageFragment.querySelector('slot[name="detail"]').replaceWith(DetailCommandeView.dom(M.commande, { reorder: C.handler_commanderANouveau }));
 
   return pageFragment;
 };

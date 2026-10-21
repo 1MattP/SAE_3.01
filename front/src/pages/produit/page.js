@@ -30,13 +30,30 @@ C.charger = async function (urlName) {
     let data = await ProduitData.fetchOne(urlName);
     M.produit = data.produit;
     M.selectedImage = M.produit.images[0];
-    let defaut = choisirParDefaut(M.produit.variantes);
+    let defaut = choisirParDefaut(C.restantes());
     M.selection = defaut.selection;
     M.couleur = defaut.couleur;
     C.calculer();
   } catch (erreur) {
     M.message = { type: "erreur", texte: `Impossible d'afficher le produit : ${erreur.message}` };
   }
+};
+
+C.restantes = function () {
+  let panier = PanierData.load();
+
+  return M.produit.variantes.map(function (variante) {
+    let ligne = panier.find(function (item) {
+      return item.urlName === M.produit.urlName && item.options.join(",") === variante.cle && item.couleur === variante.couleur;
+    });
+
+    let dansPanier = 0;
+    if (ligne !== undefined) {
+      dansPanier = ligne.quantity;
+    }
+
+    return { cle: variante.cle, couleur: variante.couleur, stock: variante.stock - dansPanier, etatStock: variante.etatStock };
+  });
 };
 
 C.calculer = function () {
@@ -53,10 +70,12 @@ C.calculer = function () {
 
   M.optionsTexte = textes.join(", ");
 
-  let variante = trouverVariante(M.produit.variantes, M.selection, M.couleur);
+  let restantes = C.restantes();
+
+  let variante = trouverVariante(restantes, M.selection, M.couleur);
   M.variante = variante === undefined ? null : variante;
 
-  let etat = marquerIndisponibles(M.produit.options, M.produit.couleurs, M.produit.variantes, M.selection, M.couleur);
+  let etat = marquerIndisponibles(M.produit.options, M.produit.couleurs, restantes, M.selection, M.couleur);
   M.groupes = etat.groupes;
   M.teintes = etat.couleurs;
 };
@@ -119,6 +138,7 @@ C.handler_ajouterAuPanier = async function () {
       }
 
       PanierData.save(lines);
+      C.calculer();
       M.message = { type: "succes", texte: "Produit ajouté au panier." };
     }
   } catch (erreur) {
@@ -183,6 +203,7 @@ V.createPageFragment = function () {
         description: M.produit.descriptionLongue,
         mainImage: M.selectedImage,
         etatStock: M.variante === null ? "epuise" : M.variante.etatStock,
+        bloque: M.variante === null || M.variante.stock === 0,
         images: M.produit.images,
         options: M.groupes,
         selection: M.selection,
