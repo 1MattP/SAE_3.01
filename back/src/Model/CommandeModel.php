@@ -21,6 +21,28 @@ final class CommandeModel
         return (int) $this->pdo->query('SELECT COUNT(*) FROM commande')->fetchColumn();
     }
 
+    public function recentes(int $utilisateur, int $limite): array
+    {
+        $sql = 'SELECT commande.numero,
+                       commande.statut,
+                       commande.total,
+                       commande.date_creation AS date,
+                       COALESCE(SUM(ligne_commande.quantite), 0) AS articles
+                  FROM commande
+             LEFT JOIN ligne_commande ON ligne_commande.commande_id = commande.id
+                 WHERE commande.utilisateur_id = :utilisateur
+              GROUP BY commande.id
+              ORDER BY commande.id DESC
+                 LIMIT :limite';
+
+        $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':utilisateur', $utilisateur, PDO::PARAM_INT);
+        $requetePreparee->bindValue(':limite',      $limite,      PDO::PARAM_INT);
+        $requetePreparee->execute();
+
+        return $requetePreparee->fetchAll();
+    }
+
     public function creer(int $utilisateur, string $statut, float $total, array $lignes): ?string
     {
         $this->pdo->beginTransaction();

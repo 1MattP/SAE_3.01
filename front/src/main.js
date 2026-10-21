@@ -10,6 +10,8 @@ import { ValidationPage } from "./pages/validation/page.js";
 import { AdminPage } from "./pages/admin/page.js";
 import { AdminProduitsPage } from "./pages/admin-produits/page.js";
 import { AdminProduitNouveauPage, AdminProduitModifierPage } from "./pages/admin-produit/page.js";
+import { ComptePage } from "./pages/compte/page.js";
+import { CompteProfilPage } from "./pages/compte-profil/page.js";
 import { AdminCategoriesPage } from "./pages/admin-categories/page.js";
 import { AdminCategorieNouvellePage, AdminCategorieModifierPage } from "./pages/admin-categorie/page.js";
 import { The404Page } from "./pages/404/page.js";
@@ -31,6 +33,10 @@ router.addRoute("/connexion", ConnexionPage);
 router.addRoute("/inscription", InscriptionPage);
 
 router.addRoute("/validation", ValidationPage);
+
+router.addRoute("/compte", ComptePage);
+
+router.addRoute("/compte/profil", CompteProfilPage);
 
 router.addRoute("/", CataloguePage);
 router.addRoute("/admin", AdminPage);
