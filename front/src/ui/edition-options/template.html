@@ -1,0 +1,9 @@
+<div class="flex flex-col gap-5 rounded-md border border-border-default bg-surface-disabled p-4">
+  <slot name="couleurs"></slot>
+  <slot name="options"></slot>
+
+  <div class="flex items-center gap-2">
+    <button type="button" data-action="saveEdit" data-cle="{{cle}}" class="h-9 rounded-md bg-action-primary-background px-4 text-caption font-semibold text-action-primary-foreground hover:bg-action-primary-hover">Enregistrer</button>
+    <button type="button" data-action="cancelEdit" class="h-9 rounded-md border border-border-default bg-surface-default px-4 text-caption font-semibold hover:bg-surface-hover">Annuler</button>
+  </div>
+</div>
