@@ -8,6 +8,7 @@ use App\Controller\AdminProduitController;
 use App\Controller\AuthController;
 use App\Controller\CatalogueController;
 use App\Controller\CommandeController;
+use App\Controller\CompteController;
 use App\Controller\PanierController;
 use App\Controller\ProduitController;
 use App\Controller\StatsController;
@@ -31,6 +32,9 @@ return [
     'GET  /api/me'             => [AuthController::class,      'me'],
     'POST /api/commandes'      => [CommandeController::class,  'create'],
     'POST /api/commandes/annuler' => [CommandeController::class, 'cancel'],
+    'GET  /api/compte'         => [CompteController::class,    'show'],
+    'POST /api/compte/profil'  => [CompteController::class,    'updateProfil'],
+    'POST /api/compte/mot-de-passe' => [CompteController::class, 'updateMotDePasse'],
     'POST /api/panier/verifier' => [PanierController::class, 'verify'],
     'POST /api/admin/login'    => [AdminController::class,     'login'],
     'POST /api/admin/logout'   => [AdminController::class,     'logout'],

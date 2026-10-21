@@ -303,6 +303,7 @@ ALTER TABLE `produit` DROP COLUMN `stock`;
 CREATE TABLE `utilisateur` (
   `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   `email` varchar(190) NOT NULL,
+  `nom` varchar(80) NOT NULL DEFAULT '',
   `mot_de_passe` varchar(255) NOT NULL,
   `role` varchar(10) NOT NULL DEFAULT 'user',
   `date_creation` datetime NOT NULL DEFAULT current_timestamp(),

@@ -1,0 +1,22 @@
+<div class="border border-border-default p-6 font-body text-text-primary">
+  <h2 class="text-body-lg font-bold">Changer mon mot de passe</h2>
+
+  <form novalidate class="mt-6 flex flex-col gap-5">
+    <label class="flex flex-col gap-2 text-caption font-semibold">
+      Mot de passe actuel
+      <input name="actuel" type="password" autocomplete="current-password" class="h-11 rounded-md border border-border-default bg-background-default px-3 text-body-sm font-normal hover:border-border-strong focus:border-border-active" />
+    </label>
+
+    <label class="flex flex-col gap-2 text-caption font-semibold">
+      Nouveau mot de passe (8 caractères minimum)
+      <input name="nouveau" type="password" autocomplete="new-password" class="h-11 rounded-md border border-border-default bg-background-default px-3 text-body-sm font-normal hover:border-border-strong focus:border-border-active" />
+    </label>
+
+    <label class="flex flex-col gap-2 text-caption font-semibold">
+      Confirmer le nouveau mot de passe
+      <input name="confirmation" type="password" autocomplete="new-password" class="h-11 rounded-md border border-border-default bg-background-default px-3 text-body-sm font-normal hover:border-border-strong focus:border-border-active" />
+    </label>
+
+    <button type="submit" class="h-12 w-full rounded-md bg-action-primary-background text-body-sm font-semibold text-action-primary-foreground hover:bg-action-primary-hover sm:w-60">Changer le mot de passe</button>
+  </form>
+</div>

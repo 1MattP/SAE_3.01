@@ -22,6 +22,7 @@ use App\Controller\AdminProduitController;
 use App\Controller\AuthController;
 use App\Controller\CatalogueController;
 use App\Controller\CommandeController;
+use App\Controller\CompteController;
 use App\Controller\PanierController;
 use App\Controller\ProduitController;
 use App\Controller\StatsController;
@@ -79,6 +80,7 @@ try {
         AdminController::class     => new AdminController(new UtilisateurModel($pdo)),
         AdminProduitController::class => new AdminProduitController(new ProduitModel($pdo, $seuilStock)),
         AdminCategorieController::class => new AdminCategorieController(new CategorieModel($pdo)),
+        CompteController::class    => new CompteController(new UtilisateurModel($pdo), new CommandeModel($pdo)),
         StatsController::class     => new StatsController(new ProduitModel($pdo, $seuilStock), new CommandeModel($pdo)),
     ];
 
