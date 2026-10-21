@@ -2,7 +2,8 @@ import { genericRenderer, htmlToFragment } from "../../lib/utils.js";
 import { formaterPrix, formaterImage } from "../../lib/format.js";
 import template from "./template.html?raw";
 import templateLigne from "./ligne.html?raw";
-import templatePastille from "./pastille.html?raw";
+import { EditionOptionsView } from "../edition-options/index.js";
+import { PastilleCouleurView } from "../pastille-couleur/index.js";
 import templateVide from "./vide.html?raw";
 
 let PanierView = {
@@ -32,7 +33,26 @@ let PanierView = {
         if (line.couleur === "") {
           slot.remove();
         } else {
-          slot.replaceWith(htmlToFragment(genericRenderer(templatePastille, { couleur: line.couleur })));
+          slot.replaceWith(PastilleCouleurView.dom({ couleur: line.couleur }));
+        }
+        let edition = item.querySelector('slot[name="edition"]');
+        if (line.editable === false) {
+          item.querySelector('[data-action="edit"]').remove();
+        }
+        if (line.edition === null) {
+          edition.remove();
+        } else {
+          let panneau = EditionOptionsView.dom(
+            {
+              cle: line.cle,
+              couleurs: line.edition.couleurs,
+              couleur: line.edition.couleur,
+              options: line.edition.options,
+              selection: line.edition.selection,
+            },
+            { color: actions.color, option: actions.option }
+          );
+          edition.replaceWith(panneau);
         }
         item.querySelector('[data-action="minus"]').disabled = line.quantity === 1;
         item.querySelector('[data-action="plus"]').disabled = !line.canIncrease;

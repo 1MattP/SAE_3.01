@@ -1,3 +1,4 @@
+import { ProduitData } from "../../data/produits.js";
 import { PanierData } from "../../data/panier.js";
 import { StockData } from "../../data/stocks.js";
 import { htmlToFragment } from "../../lib/utils.js";
@@ -12,6 +13,7 @@ let M = {
   subtotal: 0,
   shipping: 0,
   total: 0,
+  edition: null,
   message: null,
 };
 
@@ -107,6 +109,96 @@ C.handler_supprimerLigne = function (ev) {
   V.rafraichir();
 };
 
+C.handler_modifierOptions = async function (ev) {
+  let line = M.lines.find(function (item) {
+    return item.cle === ev.target.dataset.cle;
+  });
+
+  try {
+    let data = await ProduitData.fetchOne(line.urlName);
+
+    let selection = data.produit.options.map(function (groupe) {
+      let valeur = groupe.valeurs.find(function (item) {
+        return line.options.includes(`${item.id}`);
+      });
+
+      if (valeur === undefined) {
+        valeur = groupe.valeurs[0];
+      }
+
+      return `${valeur.id}`;
+    });
+
+    let couleur = line.couleur;
+    if (!data.produit.couleurs.includes(couleur) && data.produit.couleurs.length > 0) {
+      couleur = data.produit.couleurs[0];
+    }
+
+    M.edition = {
+      cle: line.cle,
+      options: data.produit.options,
+      couleurs: data.produit.couleurs,
+      selection: selection,
+      couleur: couleur,
+    };
+    M.message = null;
+  } catch (erreur) {
+    M.message = { type: "erreur", texte: erreur.message };
+  }
+
+  V.rafraichir();
+};
+
+C.handler_choisirOption = function (groupe, valeur) {
+  M.edition.selection[groupe] = valeur;
+  V.rafraichir();
+};
+
+C.handler_choisirCouleur = function (code) {
+  M.edition.couleur = code;
+  V.rafraichir();
+};
+
+C.handler_annulerModification = function () {
+  M.edition = null;
+  V.rafraichir();
+};
+
+C.handler_enregistrerOptions = async function () {
+  let line = M.lines.find(function (item) {
+    return item.cle === M.edition.cle;
+  });
+
+  let textes = [];
+  for (let i = 0; i < M.edition.options.length; i++) {
+    let groupe = M.edition.options[i];
+    let valeur = groupe.valeurs.find(function (item) {
+      return `${item.id}` === M.edition.selection[i];
+    });
+    textes.push(`${groupe.nom} : ${valeur.libelle}`);
+  }
+
+  line.options = M.edition.selection;
+  line.optionsTexte = textes.join(", ");
+  line.couleur = M.edition.couleur;
+  line.cle = line.urlName + "|" + line.options.join(",") + "|" + line.couleur;
+
+  let autre = M.lines.find(function (item) {
+    return item !== line && item.cle === line.cle;
+  });
+  if (autre !== undefined) {
+    autre.quantity += line.quantity;
+    M.lines = M.lines.filter(function (item) {
+      return item !== line;
+    });
+  }
+
+  M.edition = null;
+  C.enregistrer();
+  await C.synchroniser();
+  V.rafraichir();
+};
+
 C.handler_validerPanier = function () {
   V.redirect("validation");
 };
@@ -144,11 +236,38 @@ V.createPageFragment = function () {
 
   pageFragment.querySelector('slot[name="message"]').replaceWith(MessageView.dom(M.message));
 
+  let lignes = M.lines.map(function (line) {
+    let edition = null;
+    if (M.edition !== null && M.edition.cle === line.cle) {
+      edition = M.edition;
+    }
+
+    return {
+      cle: line.cle,
+      urlName: line.urlName,
+      titre: line.titre,
+      image: line.image,
+      prix: line.prix,
+      quantity: line.quantity,
+      total: line.total,
+      canIncrease: line.canIncrease,
+      optionsTexte: line.optionsTexte,
+      couleur: line.couleur,
+      editable: line.options.length > 0 || line.couleur !== "",
+      edition: edition,
+    };
+  });
+
   pageFragment.querySelector('slot[name="panier"]').replaceWith(
-    PanierView.dom(M.lines, {
+    PanierView.dom(lignes, {
       plus: C.handler_augmenterQuantite,
       minus: C.handler_diminuerQuantite,
       delete: C.handler_supprimerLigne,
+      edit: C.handler_modifierOptions,
+      option: C.handler_choisirOption,
+      color: C.handler_choisirCouleur,
+      saveEdit: C.handler_enregistrerOptions,
+      cancelEdit: C.handler_annulerModification,
     })
   );
 

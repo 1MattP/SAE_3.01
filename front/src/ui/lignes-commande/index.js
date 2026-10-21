@@ -2,7 +2,7 @@ import { genericRenderer, htmlToFragment } from "../../lib/utils.js";
 import { formaterPrix, formaterImage } from "../../lib/format.js";
 import template from "./template.html?raw";
 import templateLigne from "./ligne.html?raw";
-import templatePastille from "./pastille.html?raw";
+import { PastilleCouleurView } from "../pastille-couleur/index.js";
 
 let LignesCommandeView = {
   html: function (data) {
@@ -30,7 +30,7 @@ let LignesCommandeView = {
       if (line.couleur === "") {
         slot.remove();
       } else {
-        slot.replaceWith(htmlToFragment(genericRenderer(templatePastille, { couleur: line.couleur })));
+        slot.replaceWith(PastilleCouleurView.dom({ couleur: line.couleur }));
       }
 
       return item;
