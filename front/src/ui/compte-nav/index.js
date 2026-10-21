@@ -12,6 +12,7 @@ let CompteNavView = {
 
     let items = [
       htmlToFragment(genericRenderer(templateItem, { lien: "/compte", label: "Aperçu" })),
+      htmlToFragment(genericRenderer(templateItem, { lien: "/compte/commandes", label: "Mes commandes" })),
       htmlToFragment(genericRenderer(templateItem, { lien: "/compte/profil", label: "Mon profil" })),
     ];
     fragment.querySelector('slot[name="items"]').replaceWith(...items);

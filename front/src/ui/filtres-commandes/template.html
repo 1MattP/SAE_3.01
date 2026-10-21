@@ -1,0 +1,22 @@
+<form novalidate class="mt-6 flex flex-wrap items-end gap-4 font-body text-text-primary">
+  <label class="flex flex-col gap-2 text-caption font-semibold">
+    Statut
+    <select name="statut" class="h-11 rounded-md border border-border-default bg-background-default px-3 text-body-sm font-normal hover:border-border-strong focus:border-border-active">
+      <option value="">Tous</option>
+      <option value="en cours">En cours</option>
+      <option value="disponible">Disponible</option>
+      <option value="retirée">Retirée</option>
+      <option value="annulée">Annulée</option>
+    </select>
+  </label>
+
+  <label class="flex flex-col gap-2 text-caption font-semibold">
+    Du
+    <input name="du" type="date" value="{{du}}" class="h-11 rounded-md border border-border-default bg-background-default px-3 text-body-sm font-normal hover:border-border-strong focus:border-border-active" />
+  </label>
+
+  <label class="flex flex-col gap-2 text-caption font-semibold">
+    Au
+    <input name="au" type="date" value="{{au}}" class="h-11 rounded-md border border-border-default bg-background-default px-3 text-body-sm font-normal hover:border-border-strong focus:border-border-active" />
+  </label>
+</form>

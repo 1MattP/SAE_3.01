@@ -30,6 +30,8 @@ return [
     'POST /api/login'          => [AuthController::class,      'login'],
     'POST /api/logout'         => [AuthController::class,      'logout'],
     'GET  /api/me'             => [AuthController::class,      'me'],
+    'GET  /api/commandes'      => [CommandeController::class,  'index'],
+    'GET  /api/commande'       => [CommandeController::class,  'show'],
     'POST /api/commandes'      => [CommandeController::class,  'create'],
     'POST /api/commandes/annuler' => [CommandeController::class, 'cancel'],
     'GET  /api/compte'         => [CompteController::class,    'show'],

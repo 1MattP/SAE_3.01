@@ -4,13 +4,14 @@ import template from "./template.html?raw";
 import templateLigne from "./ligne.html?raw";
 import templateVide from "./vide.html?raw";
 
-let CommandesRecentesView = {
-  html: function () {
-    return template;
+let ListeCommandesView = {
+  html: function (data) {
+    return genericRenderer(template, { titre: data.titre });
   },
 
-  dom: function (commandes) {
-    let fragment = htmlToFragment(CommandesRecentesView.html());
+  dom: function (data) {
+    let fragment = htmlToFragment(ListeCommandesView.html(data));
+    let commandes = data.commandes;
 
     let lines = [htmlToFragment(templateVide)];
 
@@ -18,6 +19,7 @@ let CommandesRecentesView = {
       lines = commandes.map(function (commande) {
         return htmlToFragment(genericRenderer(templateLigne, {
           numero: commande.numero,
+          lien: "/compte/commandes/" + commande.numero,
           date: formaterDate(commande.date),
           articles: commande.articles,
           statut: commande.statut,
@@ -31,4 +33,4 @@ let CommandesRecentesView = {
   },
 };
 
-export { CommandesRecentesView };
+export { ListeCommandesView };

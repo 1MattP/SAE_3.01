@@ -21,6 +21,87 @@ final class CommandeModel
         return (int) $this->pdo->query('SELECT COUNT(*) FROM commande')->fetchColumn();
     }
 
+    private const FILTRE = "commande.utilisateur_id = :utilisateur
+                 AND (:statut = '' OR commande.statut = :statutFiltre)
+                 AND (:du = '' OR DATE(commande.date_creation) >= :duFiltre)
+                 AND (:au = '' OR DATE(commande.date_creation) <= :auFiltre)";
+
+    private function lierFiltre(\PDOStatement $requetePreparee, int $utilisateur, string $statut, string $du, string $au): void
+    {
+        $requetePreparee->bindValue(':utilisateur', $utilisateur, PDO::PARAM_INT);
+        $requetePreparee->bindValue(':statut',      $statut,      PDO::PARAM_STR);
+        $requetePreparee->bindValue(':statutFiltre', $statut,     PDO::PARAM_STR);
+        $requetePreparee->bindValue(':du',          $du,          PDO::PARAM_STR);
+        $requetePreparee->bindValue(':duFiltre',    $du,          PDO::PARAM_STR);
+        $requetePreparee->bindValue(':au',          $au,          PDO::PARAM_STR);
+        $requetePreparee->bindValue(':auFiltre',    $au,          PDO::PARAM_STR);
+    }
+
+    public function compterFiltre(int $utilisateur, string $statut, string $du, string $au): int
+    {
+        $sql = 'SELECT COUNT(*) FROM commande WHERE ' . self::FILTRE;
+
+        $requetePreparee = $this->pdo->prepare($sql);
+        $this->lierFiltre($requetePreparee, $utilisateur, $statut, $du, $au);
+        $requetePreparee->execute();
+
+        return (int) $requetePreparee->fetchColumn();
+    }
+
+    public function listerFiltre(int $utilisateur, string $statut, string $du, string $au, int $limite, int $decalage): array
+    {
+        $sql = 'SELECT commande.numero,
+                       commande.statut,
+                       commande.total,
+                       commande.date_creation AS date,
+                       COALESCE(SUM(ligne_commande.quantite), 0) AS articles
+                  FROM commande
+             LEFT JOIN ligne_commande ON ligne_commande.commande_id = commande.id
+                 WHERE ' . self::FILTRE . '
+              GROUP BY commande.id
+              ORDER BY commande.id DESC
+                 LIMIT :limite OFFSET :decalage';
+
+        $requetePreparee = $this->pdo->prepare($sql);
+        $this->lierFiltre($requetePreparee, $utilisateur, $statut, $du, $au);
+        $requetePreparee->bindValue(':limite',   $limite,   PDO::PARAM_INT);
+        $requetePreparee->bindValue(':decalage', $decalage, PDO::PARAM_INT);
+        $requetePreparee->execute();
+
+        return $requetePreparee->fetchAll();
+    }
+
+    public function trouverParNumero(string $numero, int $utilisateur): ?array
+    {
+        $sql = 'SELECT id, numero, statut, total, date_creation AS date
+                  FROM commande
+                 WHERE numero = :numero AND utilisateur_id = :utilisateur';
+
+        $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':numero',      $numero,      PDO::PARAM_STR);
+        $requetePreparee->bindValue(':utilisateur', $utilisateur, PDO::PARAM_INT);
+        $requetePreparee->execute();
+
+        $commande = $requetePreparee->fetch();
+
+        if ($commande === false) {
+            return null;
+        }
+
+        $sql = 'SELECT titre, options, couleur, prix_unitaire AS prix, quantite
+                  FROM ligne_commande
+                 WHERE commande_id = :commande
+              ORDER BY id';
+
+        $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':commande', $commande['id'], PDO::PARAM_INT);
+        $requetePreparee->execute();
+
+        $commande['lignes'] = $requetePreparee->fetchAll();
+
+        return $commande;
+    }
+
     public function recentes(int $utilisateur, int $limite): array
     {
         $sql = 'SELECT commande.numero,

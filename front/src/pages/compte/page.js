@@ -1,7 +1,7 @@
 import { AuthData } from "../../data/auth.js";
 import { CompteData } from "../../data/compte.js";
 import { genericRenderer, htmlToFragment } from "../../lib/utils.js";
-import { CommandesRecentesView } from "../../ui/commandes-recentes/index.js";
+import { ListeCommandesView } from "../../ui/liste-commandes/index.js";
 import { CompteNavView } from "../../ui/compte-nav/index.js";
 import { InfosCompteView } from "../../ui/infos-compte/index.js";
 import { MessageView } from "../../ui/message/index.js";
@@ -100,7 +100,7 @@ V.createPageFragment = function () {
     CompteNavView.dom({ logout: C.handler_deconnecter })
   );
   pageFragment.querySelector('slot[name="infos"]').replaceWith(InfosCompteView.dom(infos));
-  pageFragment.querySelector('slot[name="commandes"]').replaceWith(CommandesRecentesView.dom(M.commandes));
+  pageFragment.querySelector('slot[name="commandes"]').replaceWith(ListeCommandesView.dom({ titre: "Mes commandes récentes", commandes: M.commandes }));
 
   return pageFragment;
 };

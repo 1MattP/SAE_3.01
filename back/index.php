@@ -75,7 +75,7 @@ try {
         CatalogueController::class => new CatalogueController(new ProduitModel($pdo, $seuilStock)),
         ProduitController::class   => new ProduitController(new ProduitModel($pdo, $seuilStock)),
         AuthController::class      => new AuthController(new UtilisateurModel($pdo)),
-        CommandeController::class  => new CommandeController(new CommandeModel($pdo), new ProduitModel($pdo, $seuilStock)),
+        CommandeController::class  => new CommandeController(new CommandeModel($pdo), new ProduitModel($pdo, $seuilStock), $config['chemin']),
         PanierController::class    => new PanierController(new ProduitModel($pdo, $seuilStock)),
         AdminController::class     => new AdminController(new UtilisateurModel($pdo)),
         AdminProduitController::class => new AdminProduitController(new ProduitModel($pdo, $seuilStock)),
