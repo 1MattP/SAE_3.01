@@ -11,6 +11,8 @@ import { AdminPage } from "./pages/admin/page.js";
 import { AdminProduitsPage } from "./pages/admin-produits/page.js";
 import { AdminProduitNouveauPage, AdminProduitModifierPage } from "./pages/admin-produit/page.js";
 import { ComptePage } from "./pages/compte/page.js";
+import { CompteCommandesPage } from "./pages/compte-commandes/page.js";
+import { CompteCommandePage } from "./pages/compte-commande/page.js";
 import { CompteProfilPage } from "./pages/compte-profil/page.js";
 import { AdminCategoriesPage } from "./pages/admin-categories/page.js";
 import { AdminCategorieNouvellePage, AdminCategorieModifierPage } from "./pages/admin-categorie/page.js";
@@ -38,7 +40,12 @@ router.addRoute("/compte", ComptePage);
 
 router.addRoute("/compte/profil", CompteProfilPage);
 
+router.addRoute("/compte/commandes", CompteCommandesPage);
+
+router.addRoute("/compte/commandes/:numero", CompteCommandePage);
+
 router.addRoute("/", CataloguePage);
+
 router.addRoute("/admin", AdminPage);
 
 router.addRoute("/admin/produits", AdminProduitsPage);

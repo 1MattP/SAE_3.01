@@ -1,0 +1,12 @@
+<div class="flex items-center gap-4 border-b border-border-default py-4">
+  <div class="flex flex-1 flex-col gap-1">
+    <p class="text-body-sm font-semibold">{{titre}}</p>
+    <div class="flex items-center gap-2">
+      <slot name="couleur"></slot>
+      <p class="text-caption text-text-secondary empty:hidden">{{options}}</p>
+    </div>
+    <p class="text-caption text-text-secondary">Quantité : {{quantite}} · Prix unitaire : {{prix}}</p>
+  </div>
+
+  <p class="text-body-sm font-bold">{{total}}</p>
+</div>

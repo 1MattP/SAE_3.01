@@ -1,0 +1,13 @@
+<section class="mx-auto max-w-6xl px-4 py-8 font-body text-text-primary sm:px-6 sm:py-10">
+  <slot name="nav"></slot>
+
+  <a href="/compte/commandes" data-link class="mt-8 inline-block text-body-sm font-semibold underline">Retour à mes commandes</a>
+
+  <div class="mt-6 empty:hidden">
+    <slot name="message"></slot>
+  </div>
+
+  <div class="mt-6 max-w-2xl">
+    <slot name="detail"></slot>
+  </div>
+</section>

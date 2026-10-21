@@ -16,10 +16,25 @@ final class CommandeController
 
     private ProduitModel $produits;
 
-    public function __construct(CommandeModel $commandes, ProduitModel $produits)
+    /** Chemin du projet sur le serveur, celui des cookies (voir config.php). */
+    private string $chemin;
+
+    public function __construct(CommandeModel $commandes, ProduitModel $produits, string $chemin)
     {
         $this->commandes = $commandes;
         $this->produits  = $produits;
+        $this->chemin    = $chemin;
+    }
+
+    private function optionsCookie(): array
+    {
+        return [
+            'expires'  => time() + 30 * 24 * 3600,
+            'path'     => $this->chemin,
+            'httponly' => true,
+            'secure'   => true,
+            'samesite' => 'Lax',
+        ];
     }
 
 
@@ -142,6 +157,100 @@ final class CommandeController
                 'lignes' => $lignes,
             ],
         ], 201);
+    }
+
+    public function index(Request $requete): void
+    {
+        $utilisateur = $this->verifierConnexion();
+
+       
+        $statut = $requete->parametre('statut') ?? $_COOKIE['commandes_statut'] ?? '';
+        $du     = $requete->parametre('du') ?? $_COOKIE['commandes_du'] ?? '';
+        $au     = $requete->parametre('au') ?? $_COOKIE['commandes_au'] ?? '';
+
+      
+        if (!in_array($statut, ['', 'en cours', 'disponible', 'retirée', 'annulée'], true)) {
+            $statut = '';
+        }
+
+        if ($du !== '' && !$this->dateValide($du)) {
+            $du = '';
+        }
+
+        if ($au !== '' && !$this->dateValide($au)) {
+            $au = '';
+        }
+
+        if ($du !== '' && $au !== '' && $du > $au) {
+            $au = '';
+        }
+
+        if ($requete->parametre('statut') !== null) {
+            setcookie('commandes_statut', $statut, $this->optionsCookie());
+            setcookie('commandes_du',     $du,     $this->optionsCookie());
+            setcookie('commandes_au',     $au,     $this->optionsCookie());
+        }
+
+        $parPage    = 10;
+        $total      = $this->commandes->compterFiltre($utilisateur, $statut, $du, $au);
+        $pagesTotal = max(1, (int) ceil($total / $parPage));
+        $page       = (int) ($requete->parametre('page', '1') ?? '1');
+        $page       = max(1, min($page, $pagesTotal));
+
+        Response::json([
+            'filtres'    => ['statut' => $statut, 'du' => $du, 'au' => $au],
+            'commandes'  => $this->commandes->listerFiltre($utilisateur, $statut, $du, $au, $parPage, ($page - 1) * $parPage),
+            'page'       => $page,
+            'pagesTotal' => $pagesTotal,
+            'total'      => $total,
+        ]);
+    }
+
+    public function show(Request $requete): void
+    {
+        $utilisateur = $this->verifierConnexion();
+
+        $numero = $requete->parametre('numero', '') ?? '';
+
+        if ($numero === '' || strlen($numero) > 20) {
+            Response::erreur('Numéro de commande invalide.', 400);
+        }
+
+        $commande = $this->commandes->trouverParNumero($numero, $utilisateur);
+
+        if ($commande === null) {
+            Response::erreur('Commande introuvable.', 404);
+        }
+
+        for ($i = 0; $i < count($commande['lignes']); $i++) {
+            $commande['lignes'][$i]['total'] = round((float) $commande['lignes'][$i]['prix'] * $commande['lignes'][$i]['quantite'], 2);
+        }
+
+        unset($commande['id']);
+
+        Response::json(['commande' => $commande]);
+    }
+
+    private function verifierConnexion(): int
+    {
+        if (($_SESSION['utilisateur'] ?? null) === null) {
+            Response::erreur('Vous devez être connecté.', 401);
+        }
+
+        return (int) $_SESSION['utilisateur'];
+    }
+
+    private function dateValide(string $date): bool
+    {
+        if (strlen($date) !== 10) {
+            return false;
+        }
+
+        $annee = (int) substr($date, 0, 4);
+        $mois  = (int) substr($date, 5, 2);
+        $jour  = (int) substr($date, 8, 2);
+
+        return checkdate($mois, $jour, $annee) && sprintf('%04d-%02d-%02d', $annee, $mois, $jour) === $date;
     }
 
     public function cancel(Request $requete): void
