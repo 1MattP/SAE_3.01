@@ -44,8 +44,8 @@ final class CommandeModel
         $requetePreparee->bindValue(':id',     $id,     PDO::PARAM_INT);
         $requetePreparee->execute();
 
-        $sql = 'INSERT INTO ligne_commande (commande_id, produit_id, titre, prix_unitaire, quantite)
-                VALUES (:commande, :produit, :titre, :prix, :quantite)';
+        $sql = 'INSERT INTO ligne_commande (commande_id, produit_id, titre, options, couleur, prix_unitaire, quantite)
+                VALUES (:commande, :produit, :titre, :options, :couleur, :prix, :quantite)';
 
         $insertion = $this->pdo->prepare($sql);
 
@@ -69,6 +69,8 @@ final class CommandeModel
             $insertion->bindValue(':commande', $id,                      PDO::PARAM_INT);
             $insertion->bindValue(':produit',  $lignes[$i]['produit'],   PDO::PARAM_INT);
             $insertion->bindValue(':titre',    $lignes[$i]['titre'],     PDO::PARAM_STR);
+            $insertion->bindValue(':options',  $lignes[$i]['options'],   PDO::PARAM_STR);
+            $insertion->bindValue(':couleur',  $lignes[$i]['couleur'],   PDO::PARAM_STR);
             $insertion->bindValue(':prix',     $lignes[$i]['prix'],      PDO::PARAM_STR);
             $insertion->bindValue(':quantite', $lignes[$i]['quantite'],  PDO::PARAM_INT);
             $insertion->execute();

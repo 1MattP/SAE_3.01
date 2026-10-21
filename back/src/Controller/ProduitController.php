@@ -47,6 +47,8 @@ final class ProduitController
                 'etatStock'         => $produit['etatStock'],
                 'stock'             => (int) $produit['stock'],
                 'images'            => $this->produits->images($id),
+                'options'           => $this->produits->options($id),
+                'couleurs'          => $this->produits->listerCouleurs($produit['couleurs']),
             ],
         ]);
     }

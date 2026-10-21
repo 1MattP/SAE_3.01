@@ -61,7 +61,7 @@ C.charger = async function () {
 C.preparer = function () {
   if (M.order !== null) {
     M.lignes = M.order.lignes.map(function (line, index) {
-      return { titre: line.titre, image: M.images[index], prix: line.prix, quantity: line.quantite, total: line.total };
+      return { titre: line.titre, options: line.options, couleur: line.couleur, image: M.images[index], prix: line.prix, quantity: line.quantite, total: line.total };
     });
     M.sousTotal = M.order.total;
     M.total = M.order.total;
@@ -74,7 +74,7 @@ C.preparer = function () {
   M.lignes = M.lines.map(function (line) {
     let lineTotal = line.prix * line.quantity;
     sum += lineTotal;
-    return { titre: line.titre, image: line.image, prix: line.prix, quantity: line.quantity, total: lineTotal };
+    return { titre: line.titre, options: line.optionsTexte, couleur: line.couleur, image: line.image, prix: line.prix, quantity: line.quantity, total: lineTotal };
   });
   M.sousTotal = sum;
   M.total = sum;
@@ -103,7 +103,7 @@ C.expliquerRefus = async function (texte) {
 
 C.handler_confirmerCommande = async function () {
   let items = M.lines.map(function (line) {
-    return { urlName: line.urlName, quantity: line.quantity };
+    return { urlName: line.urlName, quantity: line.quantity, options: line.options, couleur: line.couleur };
   });
 
   try {

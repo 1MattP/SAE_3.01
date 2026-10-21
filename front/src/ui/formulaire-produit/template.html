@@ -66,6 +66,11 @@
       <input name="image4" type="text" value="{{image4}}" class="h-11 rounded-md border border-border-default bg-background-default px-3 text-body-sm font-normal hover:border-border-strong focus:border-border-active" />
     </label>
 
+    <label class="flex flex-col gap-2 text-caption font-semibold">
+      Options (une par ligne, sous la forme Nom : valeur, valeur)
+      <textarea name="options" rows="4" placeholder="Pointure : 40, 41, 42&#10;Taille : S, M, L" class="rounded-md border border-border-default bg-background-default px-3 py-2 text-body-sm font-normal hover:border-border-strong focus:border-border-active">{{options}}</textarea>
+    </label>
+
     <button type="submit" class="h-12 w-full rounded-md bg-action-primary-background text-body-sm font-semibold text-action-primary-foreground hover:bg-action-primary-hover sm:w-60">{{button}}</button>
   </form>
 </div>

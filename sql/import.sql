@@ -31,6 +31,8 @@ DROP TABLE IF EXISTS `mouvement_stock`;
 DROP TABLE IF EXISTS `ligne_commande`;
 DROP TABLE IF EXISTS `commande`;
 DROP TABLE IF EXISTS `utilisateur`;
+DROP TABLE IF EXISTS `option_valeur`;
+DROP TABLE IF EXISTS `option_groupe`;
 DROP TABLE IF EXISTS `image_produit`;
 DROP TABLE IF EXISTS `produit`;
 DROP TABLE IF EXISTS `categorie`;
@@ -160,6 +162,62 @@ WHERE produit.image IS NOT NULL;
 -- --------------------------------------------------------
 
 --
+-- Structure des tables `option_groupe` et `option_valeur`
+--
+-- Un groupe est une option d'un produit (Pointure, Taille…) et
+-- contient plusieurs valeurs.
+--
+
+CREATE TABLE `option_groupe` (
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `produit_id` smallint(5) UNSIGNED NOT NULL,
+  `nom` varchar(40) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_option_groupe_produit` (`produit_id`),
+  CONSTRAINT `fk_option_groupe_produit` FOREIGN KEY (`produit_id`) REFERENCES `produit` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `option_valeur` (
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `groupe_id` int(10) UNSIGNED NOT NULL,
+  `libelle` varchar(40) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_option_valeur_groupe` (`groupe_id`),
+  CONSTRAINT `fk_option_valeur_groupe` FOREIGN KEY (`groupe_id`) REFERENCES `option_groupe` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `option_groupe` (`produit_id`, `nom`)
+SELECT `id`, 'Pointure' FROM `produit` WHERE `categorie_id` = 1;
+
+INSERT INTO `option_groupe` (`produit_id`, `nom`)
+SELECT `id`, 'Taille' FROM `produit` WHERE `categorie_id` = 2;
+
+INSERT INTO `option_valeur` (`groupe_id`, `libelle`)
+SELECT `option_groupe`.`id`, `valeurs`.`libelle`
+  FROM `option_groupe`
+CROSS JOIN (
+          SELECT '40' AS `libelle`
+UNION ALL SELECT '41'
+UNION ALL SELECT '42'
+UNION ALL SELECT '43'
+UNION ALL SELECT '44'
+) AS `valeurs`
+WHERE `option_groupe`.`nom` = 'Pointure';
+
+INSERT INTO `option_valeur` (`groupe_id`, `libelle`)
+SELECT `option_groupe`.`id`, `valeurs`.`libelle`
+  FROM `option_groupe`
+CROSS JOIN (
+          SELECT 'S' AS `libelle`
+UNION ALL SELECT 'M'
+UNION ALL SELECT 'L'
+UNION ALL SELECT 'XL'
+) AS `valeurs`
+WHERE `option_groupe`.`nom` = 'Taille';
+
+-- --------------------------------------------------------
+
+--
 -- Structure de la table `utilisateur`
 --
 -- mot_de_passe contient le hash bcrypt (60 caractères), jamais le mot de
@@ -214,6 +272,8 @@ CREATE TABLE `ligne_commande` (
   `titre` varchar(160) NOT NULL,
   `prix_unitaire` decimal(7,2) NOT NULL,
   `quantite` smallint(5) UNSIGNED NOT NULL,
+  `options` varchar(255) NOT NULL DEFAULT '',
+  `couleur` varchar(120) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
   KEY `idx_ligne_commande_commande` (`commande_id`),
   KEY `idx_ligne_commande_produit` (`produit_id`),
