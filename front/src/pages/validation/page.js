@@ -80,7 +80,7 @@ C.preparer = function () {
   M.lignes = M.lines.map(function (line) {
     let lineTotal = line.prix * line.quantity;
     sum += lineTotal;
-    return { titre: line.titre, options: line.optionsTexte, couleur: line.couleur, image: line.image, prix: line.prix, quantity: line.quantity, total: lineTotal };
+    return { titre: line.titre, options: line.optionsTexte, couleur: line.couleur, image: line.image, prix: line.prix, prixBarre: line.prixBarre, quantity: line.quantity, total: lineTotal };
   });
   M.sousTotal = sum;
   M.reduction = 0;

@@ -12,7 +12,8 @@ let CarteProduitView = {
       titre: produit.titre,
       lien: "/produit/" + produit.urlName,
       description: produit.description,
-      prix: formaterPrix(produit.prix),
+      prix: formaterPrix(produit.prixPromo ?? produit.prix),
+      prixBarre: produit.prixPromo === null ? "" : formaterPrix(produit.prix),
       image: formaterImage(produit.image),
     });
   },

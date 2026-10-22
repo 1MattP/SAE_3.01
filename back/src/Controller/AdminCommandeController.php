@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Core\Acces;
 use App\Core\Request;
 use App\Core\Response;
 use App\Model\CommandeModel;
@@ -49,7 +50,7 @@ final class AdminCommandeController
 
     public function index(Request $requete): void
     {
-        $this->verifierAdministrateur();
+        Acces::administrateur();
 
         if ($requete->parametre('tri') !== null) {
             setcookie('admin_commandes_tri', $requete->parametre('tri'), $this->optionsCookie());
@@ -76,7 +77,7 @@ final class AdminCommandeController
 
     public function show(Request $requete): void
     {
-        $this->verifierAdministrateur();
+        Acces::administrateur();
 
         $numero = $requete->parametre('numero', '') ?? '';
 
@@ -101,7 +102,7 @@ final class AdminCommandeController
 
     public function statut(Request $requete): void
     {
-        $this->verifierAdministrateur();
+        Acces::administrateur();
 
         $corps   = $requete->corps();
         $statut  = (string) ($corps['statut'] ?? '');
@@ -133,12 +134,5 @@ final class AdminCommandeController
         }
 
         Response::json(['modifiees' => $modifiees, 'ignorees' => $ignorees]);
-    }
-
-    private function verifierAdministrateur(): void
-    {
-        if (($_SESSION['administrateur'] ?? null) === null) {
-            Response::erreur('Accès réservé aux administrateurs.', 401);
-        }
     }
 }

@@ -43,6 +43,7 @@ final class ProduitController
                 'description'       => $produit['description'],
                 'descriptionLongue' => $produit['description_longue'],
                 'prix'              => $produit['prix'],
+                'prixPromo'         => $produit['prixPromo'],
                 'categorie'         => $produit['categorie'],
                 'etatStock'         => $produit['etatStock'],
                 'stock'             => (int) $produit['stock'],

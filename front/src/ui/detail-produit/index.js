@@ -12,6 +12,7 @@ let DetailProduitView = {
       titre: data.titre,
       subtitle: data.subtitle,
       prix: formaterPrix(data.prix),
+      prixBarre: data.prixBarre === "" ? "" : formaterPrix(data.prixBarre),
       categorie: data.categorie,
       categoryLink: "/categorie/" + data.categorie,
       description: data.description,

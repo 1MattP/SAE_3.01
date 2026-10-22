@@ -7,7 +7,7 @@
       <slot name="couleur"></slot>
       <p class="text-caption text-text-secondary empty:hidden">{{options}}</p>
     </div>
-    <p class="text-caption text-text-secondary">Prix unitaire : {{prix}}</p>
+    <p class="text-caption text-text-secondary">Prix unitaire : <s class="empty:hidden">{{prixBarre}}</s> {{prix}}</p>
     <button type="button" data-action="edit" data-cle="{{cle}}" class="self-start text-caption font-semibold underline">Modifier les options</button>
   </div>
 

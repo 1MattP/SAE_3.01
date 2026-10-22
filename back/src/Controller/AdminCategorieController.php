@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Core\Acces;
 use App\Core\Request;
 use App\Core\Response;
 use App\Model\CategorieModel;
@@ -19,14 +20,14 @@ final class AdminCategorieController
 
     public function index(): void
     {
-        $this->verifierAdministrateur();
+        Acces::administrateur();
 
         Response::json(['categories' => $this->categories->lister()]);
     }
 
     public function show(Request $requete): void
     {
-        $this->verifierAdministrateur();
+        Acces::administrateur();
 
         $id        = (int) ($requete->parametre('id', '0') ?? '0');
         $categorie = $this->categories->trouverParId($id);
@@ -40,7 +41,7 @@ final class AdminCategorieController
 
     public function create(Request $requete): void
     {
-        $this->verifierAdministrateur();
+        Acces::administrateur();
 
         $categorie = $this->lireCategorie($requete->corps(), 0);
         $id        = $this->categories->ajouter($categorie['libelle'], $categorie['description']);
@@ -50,7 +51,7 @@ final class AdminCategorieController
 
     public function update(Request $requete): void
     {
-        $this->verifierAdministrateur();
+        Acces::administrateur();
 
         $corps = $requete->corps();
         $id    = (int) ($corps['id'] ?? 0);
@@ -67,7 +68,7 @@ final class AdminCategorieController
 
     public function remove(Request $requete): void
     {
-        $this->verifierAdministrateur();
+        Acces::administrateur();
 
         $id        = (int) ($requete->corps()['id'] ?? 0);
         $categorie = $this->categories->trouverParId($id);
@@ -83,13 +84,6 @@ final class AdminCategorieController
         $this->categories->supprimer($id);
 
         Response::json(['supprime' => true]);
-    }
-
-    private function verifierAdministrateur(): void
-    {
-        if (($_SESSION['administrateur'] ?? null) === null) {
-            Response::erreur('Accès réservé aux administrateurs.', 401);
-        }
     }
 
     private function lireCategorie(array $corps, int $id): array

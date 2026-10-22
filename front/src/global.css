@@ -169,6 +169,14 @@
     --border-subtle: var(--neutral-600);
     --border-active: var(--neutral-0);
 
+    --action-primary-background: var(--neutral-0);
+    --action-primary-hover: var(--neutral-300);
+    --action-primary-foreground: var(--neutral-900);
+
+    --action-secondary-foreground: var(--neutral-0);
+    --action-secondary-border: var(--neutral-600);
+    --action-secondary-border-hover: var(--neutral-0);
+
     --icon-primary: var(--neutral-0);
     --icon-secondary: var(--neutral-300);
   }

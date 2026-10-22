@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Core\Acces;
 use App\Core\Request;
 use App\Core\Response;
 use App\Model\CodePromoModel;
@@ -19,9 +20,7 @@ final class CodePromoController
 
     public function verify(Request $requete): void
     {
-        if (($_SESSION['utilisateur'] ?? null) === null) {
-            Response::erreur('Vous devez être connecté pour utiliser un code promo.', 401);
-        }
+        Acces::client('Vous devez être connecté pour utiliser un code promo.');
 
         $saisi = strtoupper(trim((string) ($requete->corps()['code'] ?? '')));
         $code  = $this->codes->trouverParCode($saisi);

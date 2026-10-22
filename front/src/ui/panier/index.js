@@ -26,6 +26,7 @@ let PanierView = {
           options: line.optionsTexte,
           image: formaterImage(line.image),
           prix: formaterPrix(line.prix),
+          prixBarre: line.prixBarre ? formaterPrix(line.prixBarre) : "",
           quantity: line.quantity,
           total: formaterPrix(line.total),
         }));

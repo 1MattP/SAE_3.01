@@ -19,13 +19,25 @@ final class ProduitModel
 
     private int $seuilStock;
 
+    private int $remisePromo;
+
+    /** Identifiant du produit au stock total le plus élevé (en cas d'égalité, le plus ancien). */
+    private const PROMO = '(SELECT promo.id
+                              FROM produit AS promo
+                         LEFT JOIN (SELECT produit_id, SUM(stock) AS stock FROM variante GROUP BY produit_id) AS cumul
+                                ON cumul.produit_id = promo.id
+                             WHERE COALESCE(cumul.stock, 0) > 0
+                          ORDER BY cumul.stock DESC, promo.id ASC
+                             LIMIT 1)';
+
     private const TOTAL = 'LEFT JOIN (SELECT produit_id, SUM(stock) AS stock FROM variante GROUP BY produit_id) AS total
                                   ON total.produit_id = produit.id';
 
-    public function __construct(PDO $pdo, int $seuilStock)
+    public function __construct(PDO $pdo, int $seuilStock, int $remisePromo)
     {
         $this->pdo        = $pdo;
         $this->seuilStock = $seuilStock;
+        $this->remisePromo = $remisePromo;
     }
 
     public function compter(int $categorie): int
@@ -49,6 +61,7 @@ final class ProduitModel
                     produit.nom_url AS urlName,
                     produit.description,
                     produit.prix,
+                    CASE WHEN produit.id = " . self::PROMO . " THEN ROUND(produit.prix * (100 - :remise) / 100, 2) END AS prixPromo,
                     produit.couleurs,
                     produit.image,
                     CASE WHEN COALESCE(total.stock, 0) = 0 THEN 'epuise'
@@ -64,6 +77,7 @@ final class ProduitModel
 
         $requetePreparee = $this->pdo->prepare($sql);
         $requetePreparee->bindValue(':seuil',     $this->seuilStock, PDO::PARAM_INT);
+        $requetePreparee->bindValue(':remise',    $this->remisePromo, PDO::PARAM_INT);
         $requetePreparee->bindValue(':toutes',    $categorie, PDO::PARAM_INT);
         $requetePreparee->bindValue(':categorie', $categorie, PDO::PARAM_INT);
         $requetePreparee->bindValue(':limite',    $limite,    PDO::PARAM_INT);
@@ -81,6 +95,7 @@ final class ProduitModel
                        produit.description,
                        produit.description_longue,
                        produit.prix,
+                       CASE WHEN produit.id = " . self::PROMO . " THEN ROUND(produit.prix * (100 - :remise) / 100, 2) END AS prixPromo,
                        produit.couleurs,
                        COALESCE(total.stock, 0) AS stock,
                        CASE WHEN COALESCE(total.stock, 0) = 0 THEN 'epuise'
@@ -94,6 +109,7 @@ final class ProduitModel
 
         $requetePreparee = $this->pdo->prepare($sql);
         $requetePreparee->bindValue(':seuil',   $this->seuilStock, PDO::PARAM_INT);
+        $requetePreparee->bindValue(':remise',  $this->remisePromo, PDO::PARAM_INT);
         $requetePreparee->bindValue(':urlName', $urlName, PDO::PARAM_STR);
         $requetePreparee->execute();
 
@@ -455,19 +471,21 @@ final class ProduitModel
 
     public function trouverVarianteParId(int $id): ?array
     {
-        $sql = 'SELECT variante.id,
+        $sql = "SELECT variante.id,
                        variante.cle,
                        variante.couleur,
                        variante.stock,
                        produit.id AS produit,
                        produit.nom_url AS urlName,
                        produit.titre,
-                       produit.prix
+                       produit.prix,
+                       CASE WHEN produit.id = " . self::PROMO . " THEN ROUND(produit.prix * (100 - :remise) / 100, 2) END AS prixPromo
                   FROM variante
             INNER JOIN produit ON produit.id = variante.produit_id
-                 WHERE variante.id = :id';
+                 WHERE variante.id = :id";
 
         $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':remise', $this->remisePromo, PDO::PARAM_INT);
         $requetePreparee->bindValue(':id', $id, PDO::PARAM_INT);
         $requetePreparee->execute();
 
@@ -581,33 +599,4 @@ final class ProduitModel
             }
         }
     }
-
-    public function categories(): array
-    {
-        $sql = 'SELECT categorie.id,
-                       categorie.libelle,
-                       COUNT(produit.id) AS nombre
-                  FROM categorie
-              LEFT JOIN produit ON produit.categorie_id = categorie.id
-              GROUP BY categorie.id, categorie.libelle
-              ORDER BY categorie.id';
-
-              $lignes = $this->pdo->query($sql)->fetchAll();
-
-              $categories = [];
-
-                foreach ($lignes as $ligne) {
-                    $categories[] = [
-                        'id'      => (int) $ligne['id'],
-                        'libelle' => $ligne['libelle'],
-                        'nombre'  => (int) $ligne['nombre'],
-                    ];
-                }
-
-        return $categories;
-
-    }
-
-
-
 }

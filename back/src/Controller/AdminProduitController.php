@@ -4,29 +4,34 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Core\Acces;
 use App\Core\Request;
 use App\Core\Response;
+use App\Model\CategorieModel;
 use App\Model\ProduitModel;
 
 final class AdminProduitController
 {
     private ProduitModel $produits;
 
-    public function __construct(ProduitModel $produits)
+    private CategorieModel $categories;
+
+    public function __construct(ProduitModel $produits, CategorieModel $categories)
     {
-        $this->produits = $produits;
+        $this->produits   = $produits;
+        $this->categories = $categories;
     }
 
     public function index(): void
     {
-        $this->verifierAdministrateur();
+        Acces::administrateur();
 
         Response::json(['produits' => $this->produits->listerTout()]);
     }
 
     public function show(Request $requete): void
     {
-        $this->verifierAdministrateur();
+        Acces::administrateur();
 
         $id      = (int) ($requete->parametre('id', '0') ?? '0');
         $produit = null;
@@ -39,12 +44,12 @@ final class AdminProduitController
             }
         }
 
-        Response::json(['produit' => $produit, 'categories' => $this->produits->categories()]);
+        Response::json(['produit' => $produit, 'categories' => $this->categories->lister()]);
     }
 
     public function create(Request $requete): void
     {
-        $this->verifierAdministrateur();
+        Acces::administrateur();
 
         $produit = $this->lireProduit($requete->corps(), 0);
         $id      = $this->produits->ajouter($produit);
@@ -54,7 +59,7 @@ final class AdminProduitController
 
     public function update(Request $requete): void
     {
-        $this->verifierAdministrateur();
+        Acces::administrateur();
 
         $corps = $requete->corps();
         $id    = (int) ($corps['id'] ?? 0);
@@ -70,7 +75,7 @@ final class AdminProduitController
 
     public function remove(Request $requete): void
     {
-        $this->verifierAdministrateur();
+        Acces::administrateur();
 
         $id = (int) ($requete->corps()['id'] ?? 0);
 
@@ -85,7 +90,7 @@ final class AdminProduitController
 
     public function stocks(Request $requete): void
     {
-        $this->verifierAdministrateur();
+        Acces::administrateur();
 
         $corps   = $requete->corps();
         $id      = (int) ($corps['id'] ?? 0);
@@ -114,13 +119,6 @@ final class AdminProduitController
         $this->produits->modifierStocks($id, $stocks);
 
         Response::json(['produit' => ['id' => $id]]);
-    }
-
-    private function verifierAdministrateur(): void
-    {
-        if (($_SESSION['administrateur'] ?? null) === null) {
-            Response::erreur('Accès réservé aux administrateurs.', 401);
-        }
     }
 
     private function lireProduit(array $corps, int $id): array
@@ -192,7 +190,7 @@ final class AdminProduitController
             Response::erreur('Ce produit aurait ' . $combinaisons . ' variantes (options × couleurs) : 100 maximum.', 400);
         }
 
-        $categories = $this->produits->categories();
+        $categories = $this->categories->lister();
         $existe     = false;
 
         for ($i = 0; $i < count($categories); $i++) {

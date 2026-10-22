@@ -124,7 +124,8 @@ C.handler_ajouterAuPanier = async function () {
         lines.push({
           urlName: M.produit.urlName,
           titre: M.produit.titre,
-          prix: M.produit.prix,
+          prix: M.produit.prixPromo ?? M.produit.prix,
+          prixBarre: M.produit.prixPromo === null ? null : M.produit.prix,
           options: M.selection,
           couleur: M.couleur,
           optionsTexte: M.optionsTexte,
@@ -198,7 +199,8 @@ V.createPageFragment = function () {
       {
         titre: M.produit.titre,
         subtitle: M.produit.description,
-        prix: M.produit.prix,
+        prix: M.produit.prixPromo ?? M.produit.prix,
+        prixBarre: M.produit.prixPromo === null ? "" : M.produit.prix,
         categorie: M.produit.categorie,
         description: M.produit.descriptionLongue,
         mainImage: M.selectedImage,

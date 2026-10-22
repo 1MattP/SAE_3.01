@@ -1,7 +1,9 @@
-<div class="min-h-screen bg-background-subtle">
+<div class="flex min-h-screen flex-col bg-background-subtle">
   <slot name="header"></slot>
 
-  <main>
+  <main class="flex-1">
     <slot></slot>
   </main>
+
+  <slot name="footer"></slot>
 </div>
