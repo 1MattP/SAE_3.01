@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Core\Request;
 use App\Core\Response;
+use App\Model\CodePromoModel;
 use App\Model\CommandeModel;
 use App\Model\ProduitModel;
 
@@ -16,13 +17,16 @@ final class CommandeController
 
     private ProduitModel $produits;
 
+    private CodePromoModel $codes;
+
     /** Chemin du projet sur le serveur, celui des cookies (voir config.php). */
     private string $chemin;
 
-    public function __construct(CommandeModel $commandes, ProduitModel $produits, string $chemin)
+    public function __construct(CommandeModel $commandes, ProduitModel $produits, CodePromoModel $codes, string $chemin)
     {
         $this->commandes = $commandes;
         $this->produits  = $produits;
+        $this->codes     = $codes;
         $this->chemin    = $chemin;
     }
 
@@ -141,9 +145,24 @@ final class CommandeController
             ];
         }
 
+        $saisi      = strtoupper(trim((string) ($requete->corps()['code'] ?? '')));
+        $codePromo  = null;
+        $remise     = 0.0;
+
+        if ($saisi !== '') {
+            $code = $this->codes->trouverParCode($saisi);
+
+            if ($code === null) {
+                Response::erreur("Ce code promo n'existe pas.", 409);
+            }
+
+            $codePromo = $code['id'];
+            $remise    = round($somme * $code['pourcentage'] / 100, 2);
+        }
+
         $statut = 'en cours';
-        $total  = round($somme, 2);
-        $numero = $this->commandes->creer((int) $_SESSION['utilisateur'], $statut, $total, $lignes);
+        $total  = round($somme - $remise, 2);
+        $numero = $this->commandes->creer((int) $_SESSION['utilisateur'], $statut, $total, $codePromo, $remise, $lignes);
 
         if ($numero === null) {
             Response::erreur('Stock insuffisant pour un produit de votre commande.', 409);
@@ -154,6 +173,8 @@ final class CommandeController
                 'numero' => $numero,
                 'statut' => $statut,
                 'total'  => $total,
+                'remise' => $remise,
+                'code'   => $saisi,
                 'lignes' => $lignes,
             ],
         ], 201);
@@ -227,6 +248,8 @@ final class CommandeController
         }
 
         unset($commande['id']);
+
+        $commande['remise'] = (float) $commande['remise'];
 
         Response::json(['commande' => $commande]);
     }

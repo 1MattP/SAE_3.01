@@ -3,6 +3,8 @@
     <slot name="lines"></slot>
   </div>
 
+  <slot name="code"></slot>
+
   <div class="mt-6 flex flex-col gap-2 text-body-sm">
     <div class="flex justify-between">
       <p class="text-text-secondary">Sous-total</p>
@@ -11,6 +13,10 @@
     <div class="flex justify-between">
       <p class="text-text-secondary">Coût de livraison</p>
       <p class="text-text-secondary">{{shipping}}</p>
+    </div>
+    <div data-reduction class="flex justify-between">
+      <p class="text-text-secondary">{{libelleReduction}}</p>
+      <p class="text-text-secondary">-{{reduction}}</p>
     </div>
     <div class="flex justify-between border-t border-border-default pt-3 font-bold">
       <p>Total</p>

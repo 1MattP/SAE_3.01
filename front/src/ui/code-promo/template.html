@@ -1,0 +1,13 @@
+<details open class="mt-6 font-body text-text-primary">
+  <summary class="flex cursor-pointer list-none items-center justify-between text-body-lg font-bold">
+    As-tu un code promo ?
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="size-5"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+  </summary>
+
+  <form novalidate class="mt-4 flex gap-3">
+    <input name="code" type="text" autocomplete="off" value="{{saisie}}" class="h-12 min-w-0 flex-1 rounded-md bg-surface-disabled px-4 text-body-sm font-normal uppercase focus:border-border-active" />
+    <button type="submit" class="h-12 rounded-md bg-action-primary-background px-6 text-body-sm font-semibold text-action-primary-foreground hover:bg-action-primary-hover">Appliquer</button>
+  </form>
+
+  <slot name="statut"></slot>
+</details>

@@ -23,6 +23,7 @@ use App\Controller\AdminController;
 use App\Controller\AdminProduitController;
 use App\Controller\AuthController;
 use App\Controller\CatalogueController;
+use App\Controller\CodePromoController;
 use App\Controller\CommandeController;
 use App\Controller\CompteController;
 use App\Controller\PanierController;
@@ -78,7 +79,8 @@ try {
         CatalogueController::class => new CatalogueController(new ProduitModel($pdo, $seuilStock)),
         ProduitController::class   => new ProduitController(new ProduitModel($pdo, $seuilStock)),
         AuthController::class      => new AuthController(new UtilisateurModel($pdo)),
-        CommandeController::class  => new CommandeController(new CommandeModel($pdo), new ProduitModel($pdo, $seuilStock), $config['chemin']),
+        CommandeController::class  => new CommandeController(new CommandeModel($pdo), new ProduitModel($pdo, $seuilStock), new CodePromoModel($pdo), $config['chemin']),
+        CodePromoController::class => new CodePromoController(new CodePromoModel($pdo)),
         PanierController::class    => new PanierController(new ProduitModel($pdo, $seuilStock)),
         AdminController::class     => new AdminController(new UtilisateurModel($pdo)),
         AdminProduitController::class => new AdminProduitController(new ProduitModel($pdo, $seuilStock)),

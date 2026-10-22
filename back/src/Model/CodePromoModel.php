@@ -62,6 +62,27 @@ final class CodePromoModel
         return null;
     }
 
+    public function trouverParCode(string $code): ?array
+    {
+        $sql = 'SELECT id, code, pourcentage FROM code_promo WHERE code = :code';
+
+        $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':code', $code, PDO::PARAM_STR);
+        $requetePreparee->execute();
+
+        $ligne = $requetePreparee->fetch();
+
+        if ($ligne === false) {
+            return null;
+        }
+
+        return [
+            'id'          => (int) $ligne['id'],
+            'code'        => $ligne['code'],
+            'pourcentage' => (int) $ligne['pourcentage'],
+        ];
+    }
+
     public function codePris(string $code, int $sauf): bool
     {
         $sql = 'SELECT COUNT(*) FROM code_promo WHERE code = :code AND id <> :sauf';

@@ -94,6 +94,8 @@ final class AdminCommandeController
             $commande['lignes'][$i]['total'] = round((float) $commande['lignes'][$i]['prix'] * $commande['lignes'][$i]['quantite'], 2);
         }
 
+        $commande['remise'] = (float) $commande['remise'];
+
         Response::json(['commande' => $commande]);
     }
 
