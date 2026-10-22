@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Core\Acces;
 use App\Core\Response;
+use App\Model\CategorieModel;
 use App\Model\CodePromoModel;
 use App\Model\CommandeModel;
 use App\Model\ProduitModel;
@@ -17,32 +19,31 @@ final class StatsController
 
     private CodePromoModel $codes;
 
-    public function __construct(ProduitModel $produits, CommandeModel $commandes, CodePromoModel $codes)
+    private CategorieModel $categories;
+
+    public function __construct(ProduitModel $produits, CommandeModel $commandes, CodePromoModel $codes, CategorieModel $categories)
     {
         $this->produits  = $produits;
         $this->commandes = $commandes;
         $this->codes     = $codes;
+        $this->categories = $categories;
     }
 
     public function index(): void
     {
-        if (($_SESSION['administrateur'] ?? null) === null) {
-            Response::erreur('Accès réservé aux administrateurs.', 401);
-        }
+        Acces::administrateur();
 
         Response::json([
             'produits'  => $this->produits->compter(0),
             'commandes' => $this->commandes->compter(),
-            'categories' => count($this->produits->categories()),
+            'categories' => $this->categories->compter(),
             'codesPromo' => $this->codes->compter(),
         ]);
     }
 
     public function dashboard(): void
     {
-        if (($_SESSION['administrateur'] ?? null) === null) {
-            Response::erreur('Accès réservé aux administrateurs.', 401);
-        }
+        Acces::administrateur();
 
         $produits = $this->produits->listerTout();
         $stocks   = [];

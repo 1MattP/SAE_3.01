@@ -1,11 +1,13 @@
-<nav class="mt-10 flex items-center justify-center gap-4">
-  <button type="button" data-action="precedente" class="h-9 rounded-md border border-zinc-200 px-4 text-sm font-medium transition-colors hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent dark:border-zinc-800 dark:hover:bg-zinc-800">
-    Précédent
+<nav class="mt-10 flex items-center justify-center gap-2 font-body text-text-primary">
+  <button type="button" data-action="precedente" class="flex size-12 items-center justify-center rounded-full border border-border-default hover:bg-surface-hover disabled:cursor-not-allowed disabled:text-text-disabled disabled:hover:bg-transparent">
+    <span class="sr-only">Page précédente</span>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="m15 6-6 6 6 6"/></svg>
   </button>
 
-  <span class="text-sm text-zinc-500 dark:text-zinc-400">Page {{page}} sur {{pagesTotal}}</span>
+  <slot name="pages"></slot>
 
-  <button type="button" data-action="suivante" class="h-9 rounded-md border border-zinc-200 px-4 text-sm font-medium transition-colors hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent dark:border-zinc-800 dark:hover:bg-zinc-800">
-    Suivant
+  <button type="button" data-action="suivante" class="flex size-12 items-center justify-center rounded-full border border-border-default hover:bg-surface-hover disabled:cursor-not-allowed disabled:text-text-disabled disabled:hover:bg-transparent">
+    <span class="sr-only">Page suivante</span>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="m9 6 6 6-6 6"/></svg>
   </button>
 </nav>

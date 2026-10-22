@@ -1,1 +1,4 @@
-<p role="status" class="mb-6 rounded-md border px-4 py-3 text-sm {{couleurs}}">{{texte}}</p>
+<div role="status" class="mb-6 flex items-center gap-4 rounded-md border border-border-default bg-background-subtle px-6 py-4 font-body text-body-sm text-text-secondary">
+  <slot name="icone"></slot>
+  <p>{{texte}}</p>
+</div>

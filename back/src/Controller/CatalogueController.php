@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Core\Request;
 use App\Core\Response;
+use App\Model\CategorieModel;
 use App\Model\ProduitModel;
 
 /**
@@ -13,12 +14,14 @@ use App\Model\ProduitModel;
  */
 final class CatalogueController
 {
-    
     private ProduitModel $produits;
 
-    public function __construct(ProduitModel $produits)
+    private CategorieModel $categories;
+
+    public function __construct(ProduitModel $produits, CategorieModel $categories)
     {
-        $this->produits = $produits;
+        $this->produits   = $produits;
+        $this->categories = $categories;
     }
 
     public function index(Request $requete): void
@@ -26,7 +29,7 @@ final class CatalogueController
         $categories = [['id' => 0, 'libelle' => 'Tout', 'nombre' => 0]];
         $somme      = 0;
 
-        $lignes = $this->produits->categories();
+        $lignes = $this->categories->lister();
 
         for ($i = 0; $i < count($lignes); $i++) {
             $categories[] = $lignes[$i];

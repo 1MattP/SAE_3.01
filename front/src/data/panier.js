@@ -1,3 +1,5 @@
+import { annoncerPanier } from "../lib/compteur-panier.js";
+
 let PanierData = {};
 
 let CLE = import.meta.env.BASE_URL + "panier";
@@ -27,6 +29,12 @@ PanierData.load = function () {
 
 PanierData.save = function (lines) {
   localStorage.setItem(CLE, JSON.stringify(lines));
+
+  let total = 0;
+  for (let line of lines) {
+    total += line.quantity;
+  }
+  annoncerPanier(total);
 };
 
 PanierData.ajouter = function (nouvelles) {

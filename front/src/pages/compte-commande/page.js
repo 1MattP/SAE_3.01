@@ -9,7 +9,6 @@ import template from "./template.html?raw";
 
 
 let M = {
-  connecte: false,
   commande: null,
   message: null,
 };
@@ -19,7 +18,6 @@ let C = {};
 C.charger = async function (numero) {
   let data = await CommandesData.fetchOne(numero);
   M.commande = data.commande;
-  M.connecte = true;
 };
 
 C.handler_commanderANouveau = async function (ev) {
@@ -52,7 +50,6 @@ C.handler_deconnecter = async function () {
 
 C.init = async function (numero) {
   M.message = null;
-  M.connecte = false;
   M.commande = null;
 
   try {

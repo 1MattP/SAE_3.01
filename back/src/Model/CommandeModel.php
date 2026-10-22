@@ -59,7 +59,7 @@ final class CommandeModel
              LEFT JOIN ligne_commande ON ligne_commande.commande_id = commande.id
                  WHERE ' . self::FILTRE . '
               GROUP BY commande.id
-              ORDER BY commande.id DESC
+              ORDER BY commande.date_creation DESC, commande.id DESC
                  LIMIT :limite OFFSET :decalage';
 
         $requetePreparee = $this->pdo->prepare($sql);
@@ -322,7 +322,7 @@ final class CommandeModel
              LEFT JOIN ligne_commande ON ligne_commande.commande_id = commande.id
                  WHERE commande.utilisateur_id = :utilisateur
               GROUP BY commande.id
-              ORDER BY commande.id DESC
+              ORDER BY commande.date_creation DESC, commande.id DESC
                  LIMIT :limite';
 
         $requetePreparee = $this->pdo->prepare($sql);

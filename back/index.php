@@ -74,21 +74,22 @@ try {
     // Les dépendances sont créées explicitement : le modèle reçoit la connexion,
     // le contrôleur reçoit le modèle. Aucune magie, tout est lisible ici.
     $seuilStock = $config['stock']['seuil_bientot_epuise'];
+    $remisePromo = $config['promotion']['pourcentage'];
 
     $controleurs = [
-        CatalogueController::class => new CatalogueController(new ProduitModel($pdo, $seuilStock)),
-        ProduitController::class   => new ProduitController(new ProduitModel($pdo, $seuilStock)),
+        CatalogueController::class => new CatalogueController(new ProduitModel($pdo, $seuilStock, $remisePromo), new CategorieModel($pdo)),
+        ProduitController::class   => new ProduitController(new ProduitModel($pdo, $seuilStock, $remisePromo)),
         AuthController::class      => new AuthController(new UtilisateurModel($pdo)),
-        CommandeController::class  => new CommandeController(new CommandeModel($pdo), new ProduitModel($pdo, $seuilStock), new CodePromoModel($pdo), $config['chemin']),
+        CommandeController::class  => new CommandeController(new CommandeModel($pdo), new ProduitModel($pdo, $seuilStock, $remisePromo), new CodePromoModel($pdo), $config['chemin']),
         CodePromoController::class => new CodePromoController(new CodePromoModel($pdo)),
-        PanierController::class    => new PanierController(new ProduitModel($pdo, $seuilStock)),
+        PanierController::class    => new PanierController(new ProduitModel($pdo, $seuilStock, $remisePromo)),
         AdminController::class     => new AdminController(new UtilisateurModel($pdo)),
-        AdminProduitController::class => new AdminProduitController(new ProduitModel($pdo, $seuilStock)),
+        AdminProduitController::class => new AdminProduitController(new ProduitModel($pdo, $seuilStock, $remisePromo), new CategorieModel($pdo)),
         AdminCategorieController::class => new AdminCategorieController(new CategorieModel($pdo)),
         CompteController::class    => new CompteController(new UtilisateurModel($pdo), new CommandeModel($pdo)),
         AdminCommandeController::class => new AdminCommandeController(new CommandeModel($pdo), $config['chemin']),
         AdminCodePromoController::class => new AdminCodePromoController(new CodePromoModel($pdo)),
-        StatsController::class     => new StatsController(new ProduitModel($pdo, $seuilStock), new CommandeModel($pdo), new CodePromoModel($pdo)),
+        StatsController::class     => new StatsController(new ProduitModel($pdo, $seuilStock, $remisePromo), new CommandeModel($pdo), new CodePromoModel($pdo), new CategorieModel($pdo)),
     ];
 
     $routes = require __DIR__ . '/src/routes.php';

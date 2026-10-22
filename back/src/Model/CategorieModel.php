@@ -15,6 +15,11 @@ final class CategorieModel
         $this->pdo = $pdo;
     }
 
+    public function compter(): int
+    {
+        return (int) $this->pdo->query('SELECT COUNT(*) FROM categorie')->fetchColumn();
+    }
+
     public function lister(): array
     {
         $sql = 'SELECT categorie.id,

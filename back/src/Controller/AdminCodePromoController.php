@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Core\Acces;
 use App\Core\Request;
 use App\Core\Response;
 use App\Model\CodePromoModel;
@@ -19,14 +20,14 @@ final class AdminCodePromoController
 
     public function index(): void
     {
-        $this->verifierAdministrateur();
+        Acces::administrateur();
 
         Response::json(['codes' => $this->codes->lister()]);
     }
 
     public function show(Request $requete): void
     {
-        $this->verifierAdministrateur();
+        Acces::administrateur();
 
         $id   = (int) ($requete->parametre('id', '0') ?? '0');
         $code = $this->codes->trouverParId($id);
@@ -40,7 +41,7 @@ final class AdminCodePromoController
 
     public function create(Request $requete): void
     {
-        $this->verifierAdministrateur();
+        Acces::administrateur();
 
         $code = $this->lireCode($requete->corps(), 0);
         $id   = $this->codes->ajouter($code['code'], $code['pourcentage']);
@@ -50,7 +51,7 @@ final class AdminCodePromoController
 
     public function update(Request $requete): void
     {
-        $this->verifierAdministrateur();
+        Acces::administrateur();
 
         $corps = $requete->corps();
         $id    = (int) ($corps['id'] ?? 0);
@@ -67,7 +68,7 @@ final class AdminCodePromoController
 
     public function remove(Request $requete): void
     {
-        $this->verifierAdministrateur();
+        Acces::administrateur();
 
         $id = (int) ($requete->corps()['id'] ?? 0);
 
@@ -78,13 +79,6 @@ final class AdminCodePromoController
         $this->codes->supprimer($id);
 
         Response::json(['supprime' => true]);
-    }
-
-    private function verifierAdministrateur(): void
-    {
-        if (($_SESSION['administrateur'] ?? null) === null) {
-            Response::erreur('Accès réservé aux administrateurs.', 401);
-        }
     }
 
     private function lireCode(array $corps, int $id): array

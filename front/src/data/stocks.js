@@ -30,6 +30,8 @@ StockData.adjust = async function (lines) {
       }
       lines[i].quantity = result.quantity;
       lines[i].stock = result.stock;
+      lines[i].prix = result.prix;
+      lines[i].prixBarre = result.prixBarre;
       adjusted.push(lines[i]);
     }
   }

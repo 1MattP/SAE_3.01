@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Core\Acces;
 use App\Core\Request;
 use App\Core\Response;
 use App\Model\CommandeModel;
@@ -23,7 +24,7 @@ final class CompteController
 
     public function show(): void
     {
-        $id     = $this->verifierConnexion();
+        $id     = Acces::client();
         $compte = $this->utilisateurs->trouverParId($id);
 
         Response::json([
@@ -38,7 +39,7 @@ final class CompteController
 
     public function updateProfil(Request $requete): void
     {
-        $id    = $this->verifierConnexion();
+        $id    = Acces::client();
         $corps = $requete->corps();
         $nom   = trim((string) ($corps['nom'] ?? ''));
         $email = trim((string) ($corps['email'] ?? ''));
@@ -64,7 +65,7 @@ final class CompteController
 
     public function updateMotDePasse(Request $requete): void
     {
-        $id      = $this->verifierConnexion();
+        $id      = Acces::client();
         $corps   = $requete->corps();
         $actuel  = (string) ($corps['actuel'] ?? '');
         $nouveau = (string) ($corps['nouveau'] ?? '');
@@ -83,14 +84,5 @@ final class CompteController
         session_regenerate_id(true);
 
         Response::json(['modifie' => true]);
-    }
-
-    private function verifierConnexion(): int
-    {
-        if (($_SESSION['utilisateur'] ?? null) === null) {
-            Response::erreur('Vous devez être connecté.', 401);
-        }
-
-        return (int) $_SESSION['utilisateur'];
     }
 }

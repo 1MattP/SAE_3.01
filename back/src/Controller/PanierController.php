@@ -41,16 +41,22 @@ final class PanierController
                 Response::erreur('Quantité invalide.', 400);
             }
 
-            $produit = $this->produits->trouverParNomUrl($urlName);
-            $stock   = 0;
+            $produit   = $this->produits->trouverParNomUrl($urlName);
+            $stock     = 0;
+            $prix      = 0.0;
+            $prixBarre = null;
 
             if ($produit !== null) {
-                $stock = $this->stockVariante($produit, $demande);
+                $stock     = $this->stockVariante($produit, $demande);
+                $prix      = (float) ($produit['prixPromo'] ?? $produit['prix']);
+                $prixBarre = $produit['prixPromo'] === null ? null : (float) $produit['prix'];
             }
 
             $lignes[] = [
                 'urlName'  => $urlName,
                 'stock'    => $stock,
+                'prix'      => $prix,
+                'prixBarre' => $prixBarre,
                 'quantity' => min($quantite, $stock),
             ];
         }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Core\Acces;
 use App\Core\Request;
 use App\Core\Response;
 use App\Model\CodePromoModel;
@@ -44,11 +45,13 @@ final class CommandeController
 
     public function create(Request $requete): void
     {
-        if (($_SESSION['utilisateur'] ?? null) === null) {
-            Response::erreur('Vous devez être connecté pour passer commande.', 401);
-        }
+        Acces::client('Vous devez être connecté pour passer commande.');
 
         $demandes = $requete->corps()['lines'] ?? null;
+
+        if (!is_array($demandes) || count($demandes) < 1 || count($demandes) > 50) {
+            Response::erreur('Votre panier est vide ou invalide.', 400);
+        }
 
         $lignes = [];
         $somme  = 0;
@@ -130,7 +133,7 @@ final class CommandeController
                 Response::erreur($message, 409);
             }
 
-            $prix   = (float) $produit['prix'];
+            $prix   = (float) ($produit['prixPromo'] ?? $produit['prix']);
             $somme += $prix * $quantite;
 
             $lignes[] = [
@@ -182,7 +185,7 @@ final class CommandeController
 
     public function index(Request $requete): void
     {
-        $utilisateur = $this->verifierConnexion();
+        $utilisateur = Acces::client();
 
        
         $statut = $requete->parametre('statut') ?? $_COOKIE['commandes_statut'] ?? '';
@@ -229,7 +232,7 @@ final class CommandeController
 
     public function show(Request $requete): void
     {
-        $utilisateur = $this->verifierConnexion();
+        $utilisateur = Acces::client();
 
         $numero = $requete->parametre('numero', '') ?? '';
 
@@ -256,7 +259,7 @@ final class CommandeController
 
     public function reorder(Request $requete): void
     {
-        $utilisateur = $this->verifierConnexion();
+        $utilisateur = Acces::client();
 
         $numero = (string) ($requete->corps()['numero'] ?? '');
 
@@ -305,8 +308,8 @@ final class CommandeController
                 $quantite = $stock;
             }
 
-            if (abs((float) $variante['prix'] - (float) $ancienne['prix']) > 0.001) {
-                $notes[] = $nom . ' : le prix est passé de ' . number_format((float) $ancienne['prix'], 2, ',', ' ') . ' € à ' . number_format((float) $variante['prix'], 2, ',', ' ') . ' €.';
+            if (abs((float) ($variante['prixPromo'] ?? $variante['prix']) - (float) $ancienne['prix']) > 0.001) {
+                $notes[] = $nom . ' : le prix est passé de ' . number_format((float) $ancienne['prix'], 2, ',', ' ') . ' € à ' . number_format((float) ($variante['prixPromo'] ?? $variante['prix']), 2, ',', ' ') . ' €.';
             }
 
             $images = $this->produits->images((int) $variante['produit']);
@@ -314,7 +317,8 @@ final class CommandeController
             $lignes[] = [
                 'urlName'      => $variante['urlName'],
                 'titre'        => $variante['titre'],
-                'prix'         => $variante['prix'],
+                'prix'         => $variante['prixPromo'] ?? $variante['prix'],
+                'prixBarre'    => $variante['prixPromo'] === null ? null : $variante['prix'],
                 'image'        => $images[0] ?? '',
                 'options'      => $variante['cle'] === '' ? [] : explode(',', $variante['cle']),
                 'optionsTexte' => $this->libelleVariante((int) $variante['produit'], (int) $variante['id']),
@@ -350,15 +354,6 @@ final class CommandeController
         return '';
     }
 
-    private function verifierConnexion(): int
-    {
-        if (($_SESSION['utilisateur'] ?? null) === null) {
-            Response::erreur('Vous devez être connecté.', 401);
-        }
-
-        return (int) $_SESSION['utilisateur'];
-    }
-
     private function dateValide(string $date): bool
     {
         if (strlen($date) !== 10) {
@@ -374,9 +369,7 @@ final class CommandeController
 
     public function cancel(Request $requete): void
     {
-        if (($_SESSION['utilisateur'] ?? null) === null) {
-            Response::erreur('Vous devez être connecté pour annuler une commande.', 401);
-        }
+        Acces::client('Vous devez être connecté pour annuler une commande.');
 
         $numero = (string) ($requete->corps()['numero'] ?? '');
 

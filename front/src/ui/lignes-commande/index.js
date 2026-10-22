@@ -30,6 +30,7 @@ let LignesCommandeView = {
         image: formaterImage(line.image),
         quantity: line.quantity,
         prix: formaterPrix(line.prix),
+        prixBarre: line.prixBarre ? formaterPrix(line.prixBarre) : "",
         total: formaterPrix(line.total),
       }));
 

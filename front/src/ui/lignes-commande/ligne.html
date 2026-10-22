@@ -7,7 +7,7 @@
       <slot name="couleur"></slot>
       <p class="text-caption text-text-secondary empty:hidden">{{options}}</p>
     </div>
-    <p class="text-caption text-text-secondary">Quantité : {{quantity}} · Prix unitaire : {{prix}}</p>
+    <p class="text-caption text-text-secondary">Quantité : {{quantity}} · Prix unitaire : <s class="empty:hidden">{{prixBarre}}</s> {{prix}}</p>
   </div>
 
   <p class="text-body-sm font-bold">{{total}}</p>
