@@ -140,7 +140,7 @@ final class AdminProduitController
             Response::erreur('Le titre est obligatoire (160 caractères maximum).', 400);
         }
 
-        if ($urlName === '' || strlen($urlName) > 160 || preg_match('/^[a-z0-9-]+$/', $urlName) !== 1) {
+        if ($urlName === '' || strlen($urlName) > 160 || !$this->nomUrlValide($urlName)) {
             Response::erreur("Le nom dans l'URL est obligatoire : lettres minuscules, chiffres et tirets seulement.", 400);
         }
 
@@ -221,6 +221,19 @@ final class AdminProduitController
             'options'           => $options,
             'categorieId'       => $categorieId,
         ];
+    }
+
+    private function nomUrlValide(string $urlName): bool
+    {
+        $autorises = 'abcdefghijklmnopqrstuvwxyz0123456789-';
+
+        for ($i = 0; $i < strlen($urlName); $i++) {
+            if (strpos($autorises, $urlName[$i]) === false) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function lireOptions(string $texte): array

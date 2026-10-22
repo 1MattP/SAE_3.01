@@ -17,6 +17,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Core\Router;
 use App\Controller\AdminCategorieController;
+use App\Controller\AdminCommandeController;
 use App\Controller\AdminController;
 use App\Controller\AdminProduitController;
 use App\Controller\AuthController;
@@ -81,6 +82,7 @@ try {
         AdminProduitController::class => new AdminProduitController(new ProduitModel($pdo, $seuilStock)),
         AdminCategorieController::class => new AdminCategorieController(new CategorieModel($pdo)),
         CompteController::class    => new CompteController(new UtilisateurModel($pdo), new CommandeModel($pdo)),
+        AdminCommandeController::class => new AdminCommandeController(new CommandeModel($pdo), $config['chemin']),
         StatsController::class     => new StatsController(new ProduitModel($pdo, $seuilStock), new CommandeModel($pdo)),
     ];
 

@@ -27,6 +27,7 @@ SET time_zone = "+00:00";
 -- L'import est rejouable : image_produit est supprimée en premier, puis
 -- produit, car leurs clés étrangères dépendent de produit puis de categorie.
 --
+DROP TABLE IF EXISTS `journal_commande`;
 DROP TABLE IF EXISTS `mouvement_stock`;
 DROP TABLE IF EXISTS `ligne_commande`;
 DROP TABLE IF EXISTS `commande`;
@@ -385,6 +386,27 @@ CREATE TABLE `mouvement_stock` (
   CONSTRAINT `fk_mouvement_stock_produit` FOREIGN KEY (`produit_id`) REFERENCES `produit` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `fk_mouvement_stock_variante` FOREIGN KEY (`variante_id`) REFERENCES `variante` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `fk_mouvement_stock_commande` FOREIGN KEY (`commande_id`) REFERENCES `commande` (`id`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `journal_commande`
+--
+-- Une ligne par changement de statut effectué par un administrateur.
+-- administrateur contient l'email, conservé même si le compte disparaît.
+--
+
+CREATE TABLE `journal_commande` (
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `commande_id` int(10) UNSIGNED NOT NULL,
+  `administrateur` varchar(190) NOT NULL,
+  `ancien_statut` varchar(20) NOT NULL,
+  `nouveau_statut` varchar(20) NOT NULL,
+  `date_creation` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_journal_commande_commande` (`commande_id`),
+  CONSTRAINT `fk_journal_commande_commande` FOREIGN KEY (`commande_id`) REFERENCES `commande` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------

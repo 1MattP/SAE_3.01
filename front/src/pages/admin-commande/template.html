@@ -1,0 +1,19 @@
+<section class="mx-auto max-w-6xl px-4 py-8 font-body text-text-primary sm:px-6 sm:py-10">
+  <slot name="nav"></slot>
+
+  <a href="/admin/commandes" data-link class="mt-8 inline-block text-body-sm font-semibold underline">Retour aux commandes</a>
+
+  <div class="mt-6 empty:hidden">
+    <slot name="message"></slot>
+  </div>
+
+  <div class="mt-6 max-w-2xl">
+    <p class="text-body-sm text-text-secondary">Client : {{client}}</p>
+    <div class="mt-4">
+      <slot name="detail"></slot>
+    </div>
+    <slot name="actions"></slot>
+    <slot name="confirmation"></slot>
+    <slot name="journal"></slot>
+  </div>
+</section>

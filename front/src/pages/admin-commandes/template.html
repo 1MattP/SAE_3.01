@@ -1,0 +1,15 @@
+<section class="mx-auto max-w-6xl px-4 py-8 font-body text-text-primary sm:px-6 sm:py-10">
+  <slot name="nav"></slot>
+
+  <h1 class="mt-8 text-heading-lg font-bold">Commandes</h1>
+
+  <div class="mt-6 empty:hidden">
+    <slot name="message"></slot>
+  </div>
+
+  <slot name="barre"></slot>
+  <slot name="confirmation"></slot>
+  <slot name="liste"></slot>
+  <slot name="pagination"></slot>
+  <slot name="journal"></slot>
+</section>
