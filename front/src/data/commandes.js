@@ -2,8 +2,8 @@ import { getRequest, postRequest } from "../lib/api-request.js";
 
 let CommandesData = {};
 
-CommandesData.create = async function (lines) {
-  return postRequest("commandes", { lines });
+CommandesData.create = async function (lines, code) {
+  return postRequest("commandes", { lines, code });
 };
 
 CommandesData.fetchPage = async function (page, filtres) {

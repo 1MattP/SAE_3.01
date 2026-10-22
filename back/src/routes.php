@@ -9,6 +9,7 @@ use App\Controller\AdminController;
 use App\Controller\AdminProduitController;
 use App\Controller\AuthController;
 use App\Controller\CatalogueController;
+use App\Controller\CodePromoController;
 use App\Controller\CommandeController;
 use App\Controller\CompteController;
 use App\Controller\PanierController;
@@ -40,6 +41,7 @@ return [
     'GET  /api/compte'         => [CompteController::class,    'show'],
     'POST /api/compte/profil'  => [CompteController::class,    'updateProfil'],
     'POST /api/compte/mot-de-passe' => [CompteController::class, 'updateMotDePasse'],
+    'POST /api/codes-promo/verifier' => [CodePromoController::class, 'verify'],
     'POST /api/panier/verifier' => [PanierController::class, 'verify'],
     'POST /api/admin/login'    => [AdminController::class,     'login'],
     'POST /api/admin/logout'   => [AdminController::class,     'logout'],

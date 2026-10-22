@@ -1,4 +1,5 @@
 import { AuthData } from "../../data/auth.js";
+import { CodePromoData } from "../../data/codes-promo.js";
 import { CommandesData } from "../../data/commandes.js";
 import { PanierData } from "../../data/panier.js";
 import { StockData } from "../../data/stocks.js";
@@ -17,6 +18,10 @@ let M = {
   message: null,
   lignes: [],
   sousTotal: 0,
+  reduction: 0,
+  codePromo: null,
+  codeSaisi: "",
+  erreurCode: null,
   total: 0,
   numero: "",
   bouton: "",
@@ -63,7 +68,8 @@ C.preparer = function () {
     M.lignes = M.order.lignes.map(function (line, index) {
       return { titre: line.titre, options: line.options, couleur: line.couleur, image: M.images[index], prix: line.prix, quantity: line.quantite, total: line.total };
     });
-    M.sousTotal = M.order.total;
+    M.reduction = M.order.remise;
+    M.sousTotal = M.order.total + M.order.remise;
     M.total = M.order.total;
     M.numero = M.order.numero;
     M.bouton = "";
@@ -77,7 +83,11 @@ C.preparer = function () {
     return { titre: line.titre, options: line.optionsTexte, couleur: line.couleur, image: line.image, prix: line.prix, quantity: line.quantity, total: lineTotal };
   });
   M.sousTotal = sum;
-  M.total = sum;
+  M.reduction = 0;
+  if (M.codePromo !== null) {
+    M.reduction = Math.round(sum * M.codePromo.pourcentage) / 100;
+  }
+  M.total = Math.round((sum - M.reduction) * 100) / 100;
   M.numero = "";
 
   M.bouton = "";
@@ -101,13 +111,43 @@ C.expliquerRefus = async function (texte) {
   }
 };
 
+C.handler_appliquerCode = async function (code) {
+  M.codeSaisi = code;
+  M.erreurCode = null;
+
+  try {
+    M.codePromo = await CodePromoData.verify(code);
+    M.codeSaisi = M.codePromo.code;
+  } catch (erreur) {
+    M.codePromo = null;
+    M.erreurCode = erreur.message;
+  }
+
+  C.preparer();
+  V.rafraichir();
+};
+
+C.handler_retirerCode = function () {
+  M.codePromo = null;
+  M.codeSaisi = "";
+  M.erreurCode = null;
+
+  C.preparer();
+  V.rafraichir();
+};
+
 C.handler_confirmerCommande = async function () {
   let items = M.lines.map(function (line) {
     return { urlName: line.urlName, quantity: line.quantity, options: line.options, couleur: line.couleur };
   });
 
   try {
-    let data = await CommandesData.create(items);
+    let code = "";
+    if (M.codePromo !== null) {
+      code = M.codePromo.code;
+    }
+
+    let data = await CommandesData.create(items, code);
 
     M.order = data.commande;
     M.images = M.lines.map(function (line) {
@@ -129,6 +169,10 @@ C.handler_confirmerCommande = async function () {
 };
 
 C.init = async function () {
+  M.codePromo = null;
+  M.codeSaisi = "";
+  M.erreurCode = null;
+
   let verifie = await C.charger();
 
   if (verifie && M.connectedEmail === null) {
@@ -171,16 +215,27 @@ V.createPageFragment = function () {
     return pageFragment;
   }
 
+  let codePromo = null;
+  if (M.bouton !== "") {
+    codePromo = { code: null, saisie: M.codeSaisi, erreur: M.erreurCode, remise: M.reduction };
+    if (M.codePromo !== null) {
+      codePromo.code = M.codePromo.code;
+    }
+  }
+
   let data = {
     lines: M.lignes,
     subtotal: M.sousTotal,
+    reduction: M.reduction,
+    code: M.codePromo === null ? "" : M.codePromo.code,
     shipping: 0,
     total: M.total,
+    codePromo: codePromo,
     numero: M.numero,
     button: M.bouton,
   };
 
-  pageFragment.querySelector('slot[name="lignes"]').replaceWith(LignesCommandeView.dom(data));
+  pageFragment.querySelector('slot[name="lignes"]').replaceWith(LignesCommandeView.dom(data, { apply: C.handler_appliquerCode, remove: C.handler_retirerCode }));
   pageFragment.querySelector('slot[name="carte"]').replaceWith(
     CarteCommandeView.dom(data, { confirm: C.handler_confirmerCommande })
   );

@@ -11,11 +11,17 @@ let DetailCommandeView = {
       date: formaterDate(data.date),
       statut: data.statut,
       total: formaterPrix(data.total),
+      libelleReduction: data.code === "" ? "Réduction" : `Code promo ${data.code}`,
+      reduction: formaterPrix(data.remise),
     });
   },
 
   dom: function (data, actions) {
     let fragment = htmlToFragment(DetailCommandeView.html(data));
+
+    if (data.remise === 0) {
+      fragment.querySelector("[data-reduction]").remove();
+    }
 
     let lines = data.lignes.map(function (ligne) {
       let item = htmlToFragment(genericRenderer(templateLigne, {

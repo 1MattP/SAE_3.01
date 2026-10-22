@@ -95,9 +95,16 @@ final class CommandeModel
 
     public function trouverParNumero(string $numero, int $utilisateur): ?array
     {
-        $sql = 'SELECT id, numero, statut, total, date_creation AS date
+        $sql = "SELECT commande.id,
+                       commande.numero,
+                       commande.statut,
+                       commande.total,
+                       commande.remise,
+                       COALESCE(code_promo.code, '') AS code,
+                       commande.date_creation AS date
                   FROM commande
-                 WHERE numero = :numero AND utilisateur_id = :utilisateur';
+             LEFT JOIN code_promo ON code_promo.id = commande.code_promo_id
+                 WHERE commande.numero = :numero AND commande.utilisateur_id = :utilisateur";
 
         $requetePreparee = $this->pdo->prepare($sql);
         $requetePreparee->bindValue(':numero',      $numero,      PDO::PARAM_STR);
@@ -194,15 +201,18 @@ final class CommandeModel
 
     public function trouverPourAdmin(string $numero): ?array
     {
-        $sql = 'SELECT commande.id,
+        $sql = "SELECT commande.id,
                        commande.numero,
                        commande.statut,
                        commande.total,
+                       commande.remise,
+                       COALESCE(code_promo.code, '') AS code,
                        commande.date_creation AS date,
                        utilisateur.email AS client
                   FROM commande
             INNER JOIN utilisateur ON utilisateur.id = commande.utilisateur_id
-                 WHERE commande.numero = :numero';
+             LEFT JOIN code_promo ON code_promo.id = commande.code_promo_id
+                 WHERE commande.numero = :numero";
 
         $requetePreparee = $this->pdo->prepare($sql);
         $requetePreparee->bindValue(':numero', $numero, PDO::PARAM_STR);
@@ -323,17 +333,19 @@ final class CommandeModel
         return $requetePreparee->fetchAll();
     }
 
-    public function creer(int $utilisateur, string $statut, float $total, array $lignes): ?string
+    public function creer(int $utilisateur, string $statut, float $total, ?int $codePromo, float $remise, array $lignes): ?string
     {
         $this->pdo->beginTransaction();
 
-        $sql = 'INSERT INTO commande (utilisateur_id, statut, total)
-                VALUES (:utilisateur, :statut, :total)';
+        $sql = 'INSERT INTO commande (utilisateur_id, statut, total, code_promo_id, remise)
+                VALUES (:utilisateur, :statut, :total, :codePromo, :remise)';
 
         $requetePreparee = $this->pdo->prepare($sql);
         $requetePreparee->bindValue(':utilisateur', $utilisateur, PDO::PARAM_INT);
         $requetePreparee->bindValue(':statut',      $statut,      PDO::PARAM_STR);
         $requetePreparee->bindValue(':total',       $total,       PDO::PARAM_STR);
+        $requetePreparee->bindValue(':codePromo',   $codePromo,   PDO::PARAM_INT);
+        $requetePreparee->bindValue(':remise',      $remise,      PDO::PARAM_STR);
         $requetePreparee->execute();
 
         $id     = (int) $this->pdo->lastInsertId();
