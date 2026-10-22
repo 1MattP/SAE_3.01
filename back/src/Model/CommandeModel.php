@@ -124,6 +124,138 @@ final class CommandeModel
         return $commande;
     }
 
+    public function listerTout(string $ordre, int $limite, int $decalage): array
+    {
+        $sql = 'SELECT commande.numero,
+                       commande.statut,
+                       commande.total,
+                       commande.date_creation AS date,
+                       utilisateur.email AS client,
+                       COALESCE(SUM(ligne_commande.quantite), 0) AS articles
+                  FROM commande
+            INNER JOIN utilisateur ON utilisateur.id = commande.utilisateur_id
+             LEFT JOIN ligne_commande ON ligne_commande.commande_id = commande.id
+              GROUP BY commande.id
+              ORDER BY ' . $ordre . '
+                 LIMIT :limite OFFSET :decalage';
+
+        $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':limite',   $limite,   PDO::PARAM_INT);
+        $requetePreparee->bindValue(':decalage', $decalage, PDO::PARAM_INT);
+        $requetePreparee->execute();
+
+        return $requetePreparee->fetchAll();
+    }
+
+    public function trouverPourAdmin(string $numero): ?array
+    {
+        $sql = 'SELECT commande.id,
+                       commande.numero,
+                       commande.statut,
+                       commande.total,
+                       commande.date_creation AS date,
+                       utilisateur.email AS client
+                  FROM commande
+            INNER JOIN utilisateur ON utilisateur.id = commande.utilisateur_id
+                 WHERE commande.numero = :numero';
+
+        $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':numero', $numero, PDO::PARAM_STR);
+        $requetePreparee->execute();
+
+        $commande = $requetePreparee->fetch();
+
+        if ($commande === false) {
+            return null;
+        }
+
+        $sql = 'SELECT titre, options, couleur, prix_unitaire AS prix, quantite
+                  FROM ligne_commande
+                 WHERE commande_id = :commande
+              ORDER BY id';
+
+        $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':commande', $commande['id'], PDO::PARAM_INT);
+        $requetePreparee->execute();
+
+        $commande['lignes']  = $requetePreparee->fetchAll();
+        $commande['journal'] = $this->journal($commande['id'], 50);
+
+        unset($commande['id']);
+
+        return $commande;
+    }
+
+    public function journalRecent(int $limite): array
+    {
+        return $this->journal(0, $limite);
+    }
+
+    private function journal(int $commande, int $limite): array
+    {
+        $sql = 'SELECT commande.numero,
+                       journal_commande.administrateur,
+                       journal_commande.ancien_statut AS ancien,
+                       journal_commande.nouveau_statut AS nouveau,
+                       journal_commande.date_creation AS date
+                  FROM journal_commande
+            INNER JOIN commande ON commande.id = journal_commande.commande_id
+                 WHERE :tout = 0 OR journal_commande.commande_id = :commande
+              ORDER BY journal_commande.id DESC
+                 LIMIT :limite';
+
+        $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':tout',     $commande, PDO::PARAM_INT);
+        $requetePreparee->bindValue(':commande', $commande, PDO::PARAM_INT);
+        $requetePreparee->bindValue(':limite',   $limite,   PDO::PARAM_INT);
+        $requetePreparee->execute();
+
+        return $requetePreparee->fetchAll();
+    }
+
+    public function changerStatut(string $numero, array $anciens, string $nouveau, string $administrateur): bool
+    {
+        $this->pdo->beginTransaction();
+
+        $sql = 'SELECT id, statut FROM commande WHERE numero = :numero FOR UPDATE';
+
+        $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':numero', $numero, PDO::PARAM_STR);
+        $requetePreparee->execute();
+
+        $commande = $requetePreparee->fetch();
+
+        if ($commande === false || !in_array($commande['statut'], $anciens, true)) {
+            $this->pdo->rollBack();
+            return false;
+        }
+
+        $sql = 'UPDATE commande SET statut = :nouveau WHERE id = :id';
+
+        $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':nouveau', $nouveau,                      PDO::PARAM_STR);
+        $requetePreparee->bindValue(':id',      (int) $commande['id'],         PDO::PARAM_INT);
+        $requetePreparee->execute();
+
+        if ($nouveau === 'annulée') {
+            $this->rendreAuStock($numero);
+        }
+
+        $sql = 'INSERT INTO journal_commande (commande_id, administrateur, ancien_statut, nouveau_statut)
+                VALUES (:commande, :administrateur, :ancien, :nouveau)';
+
+        $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':commande',       (int) $commande['id'], PDO::PARAM_INT);
+        $requetePreparee->bindValue(':administrateur', $administrateur,       PDO::PARAM_STR);
+        $requetePreparee->bindValue(':ancien',         $commande['statut'],   PDO::PARAM_STR);
+        $requetePreparee->bindValue(':nouveau',        $nouveau,              PDO::PARAM_STR);
+        $requetePreparee->execute();
+
+        $this->pdo->commit();
+
+        return true;
+    }
+
     public function recentes(int $utilisateur, int $limite): array
     {
         $sql = 'SELECT commande.numero,
@@ -229,6 +361,15 @@ final class CommandeModel
             return false;
         }
 
+        $this->rendreAuStock($numero);
+
+        $this->pdo->commit();
+
+        return true;
+    }
+
+    private function rendreAuStock(string $numero): void
+    {
         $sql = 'SELECT ligne_commande.commande_id, ligne_commande.produit_id, ligne_commande.variante_id, ligne_commande.quantite
                   FROM ligne_commande
             INNER JOIN commande ON commande.id = ligne_commande.commande_id
@@ -261,10 +402,6 @@ final class CommandeModel
                 (int) $lignes[$i]['quantite'],
             );
         }
-
-        $this->pdo->commit();
-
-        return true;
     }
 
     private function journaliser(int $produit, int $variante, int $commande, string $type, int $quantite): void

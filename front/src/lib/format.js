@@ -11,3 +11,7 @@ export function formaterImage(image) {
 export function formaterDate(date) {
   return new Date(date.replace(" ", "T")).toLocaleDateString("fr-FR");
 }
+
+export function formaterDateHeure(date) {
+  return new Date(date.replace(" ", "T")).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" });
+}

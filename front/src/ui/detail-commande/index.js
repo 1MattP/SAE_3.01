@@ -37,7 +37,12 @@ let DetailCommandeView = {
     });
     fragment.querySelector('slot[name="lines"]').replaceWith(...lines);
 
-    fragment.querySelector('[data-action="reorder"]').addEventListener("click", actions.reorder);
+    let bouton = fragment.querySelector('[data-action="reorder"]');
+    if (actions === undefined) {
+      bouton.remove();
+    } else {
+      bouton.addEventListener("click", actions.reorder);
+    }
 
     return fragment;
   },

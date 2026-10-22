@@ -13,7 +13,7 @@ let AdminNavView = {
 
     let items = [
       htmlToFragment(genericRenderer(templateItem, { lien: "/admin/produits", label: "Produits", count: `(${stats.produits})` })),
-      htmlToFragment(genericRenderer(templateItemInactif, { label: "Commandes", count: `(${stats.commandes})` })),
+      htmlToFragment(genericRenderer(templateItem, { lien: "/admin/commandes", label: "Commandes", count: `(${stats.commandes})` })),
       htmlToFragment(genericRenderer(templateItem, { lien: "/admin/categories", label: "Catégories", count: `(${stats.categories})` })),
       htmlToFragment(genericRenderer(templateItemInactif, { label: "Statistiques", count: "" })),
     ];
