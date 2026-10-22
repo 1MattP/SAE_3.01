@@ -44,6 +44,7 @@ return [
     'POST /api/admin/logout'   => [AdminController::class,     'logout'],
     'GET  /api/admin/me'       => [AdminController::class,     'me'],
     'GET  /api/admin/stats'    => [StatsController::class,     'index'],
+    'GET  /api/admin/statistiques' => [StatsController::class, 'dashboard'],
     'GET  /api/admin/produits' => [AdminProduitController::class, 'index'],
     'GET  /api/admin/produit'  => [AdminProduitController::class, 'show'],
     'POST /api/admin/produits' => [AdminProduitController::class, 'create'],

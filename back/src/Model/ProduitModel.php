@@ -448,6 +448,11 @@ final class ProduitModel
         return $ligne === false ? null : $ligne;
     }
 
+    public function seuilStock(): int
+    {
+        return $this->seuilStock;
+    }
+
     public function trouverVarianteParId(int $id): ?array
     {
         $sql = 'SELECT variante.id,

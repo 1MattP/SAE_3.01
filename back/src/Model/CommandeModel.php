@@ -124,6 +124,51 @@ final class CommandeModel
         return $commande;
     }
 
+    public function revenusSemaine(): array
+    {
+        $sql = "SELECT jours.jour,
+                       COALESCE(SUM(commande.total), 0) AS revenu,
+                       COUNT(commande.id) AS commandes
+                  FROM (SELECT CURDATE() - INTERVAL 6 DAY AS jour
+              UNION ALL SELECT CURDATE() - INTERVAL 5 DAY
+              UNION ALL SELECT CURDATE() - INTERVAL 4 DAY
+              UNION ALL SELECT CURDATE() - INTERVAL 3 DAY
+              UNION ALL SELECT CURDATE() - INTERVAL 2 DAY
+              UNION ALL SELECT CURDATE() - INTERVAL 1 DAY
+              UNION ALL SELECT CURDATE()) AS jours
+             LEFT JOIN commande ON DATE(commande.date_creation) = jours.jour
+                              AND commande.statut <> 'annulée'
+              GROUP BY jours.jour
+              ORDER BY jours.jour";
+
+        return $this->pdo->query($sql)->fetchAll();
+    }
+
+    public function compterParStatut(): array
+    {
+        $sql = 'SELECT statut, COUNT(*) AS nombre FROM commande GROUP BY statut';
+
+        return $this->pdo->query($sql)->fetchAll();
+    }
+
+    public function plusVendus(int $limite): array
+    {
+        $sql = "SELECT ligne_commande.titre,
+                       SUM(ligne_commande.quantite) AS vendus
+                  FROM ligne_commande
+            INNER JOIN commande ON commande.id = ligne_commande.commande_id
+                 WHERE commande.statut <> 'annulée'
+              GROUP BY ligne_commande.titre
+              ORDER BY vendus DESC, ligne_commande.titre ASC
+                 LIMIT :limite";
+
+        $requetePreparee = $this->pdo->prepare($sql);
+        $requetePreparee->bindValue(':limite', $limite, PDO::PARAM_INT);
+        $requetePreparee->execute();
+
+        return $requetePreparee->fetchAll();
+    }
+
     public function listerTout(string $ordre, int $limite, int $decalage): array
     {
         $sql = 'SELECT commande.numero,

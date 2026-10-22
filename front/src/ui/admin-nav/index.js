@@ -1,7 +1,6 @@
 import { genericRenderer, htmlToFragment } from "../../lib/utils.js";
 import template from "./template.html?raw";
 import templateItem from "./item.html?raw";
-import templateItemInactif from "./item-inactif.html?raw";
 
 let AdminNavView = {
   html: function () {
@@ -15,7 +14,7 @@ let AdminNavView = {
       htmlToFragment(genericRenderer(templateItem, { lien: "/admin/produits", label: "Produits", count: `(${stats.produits})` })),
       htmlToFragment(genericRenderer(templateItem, { lien: "/admin/commandes", label: "Commandes", count: `(${stats.commandes})` })),
       htmlToFragment(genericRenderer(templateItem, { lien: "/admin/categories", label: "Catégories", count: `(${stats.categories})` })),
-      htmlToFragment(genericRenderer(templateItemInactif, { label: "Statistiques", count: "" })),
+      htmlToFragment(genericRenderer(templateItem, { lien: "/admin/statistiques", label: "Statistiques", count: "" })),
     ];
     fragment.querySelector('slot[name="items"]').replaceWith(...items);
 
