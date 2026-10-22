@@ -31,6 +31,7 @@ DROP TABLE IF EXISTS `journal_commande`;
 DROP TABLE IF EXISTS `mouvement_stock`;
 DROP TABLE IF EXISTS `ligne_commande`;
 DROP TABLE IF EXISTS `commande`;
+DROP TABLE IF EXISTS `code_promo`;
 DROP TABLE IF EXISTS `utilisateur`;
 DROP TABLE IF EXISTS `variante`;
 DROP TABLE IF EXISTS `option_valeur`;
@@ -315,6 +316,27 @@ CREATE TABLE `utilisateur` (
 -- --------------------------------------------------------
 
 --
+-- Structure de la table `code_promo`
+--
+-- pourcentage est la réduction en pourcents (1 à 100) appliquée au total.
+--
+
+CREATE TABLE `code_promo` (
+  `id` smallint(5) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `code` varchar(20) NOT NULL,
+  `pourcentage` tinyint(3) UNSIGNED NOT NULL,
+  `date_creation` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_code_promo_code` (`code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `code_promo` (`code`, `pourcentage`) VALUES
+('BIENVENUE10', 10),
+('NIKE20', 20);
+
+-- --------------------------------------------------------
+
+--
 -- Structure de la table `commande`
 --
 -- numero vaut NULL le temps de l'insertion : il est calculé à partir de
@@ -327,11 +349,15 @@ CREATE TABLE `commande` (
   `utilisateur_id` int(10) UNSIGNED NOT NULL,
   `statut` varchar(20) NOT NULL DEFAULT 'en cours',
   `total` decimal(9,2) NOT NULL,
+  `code_promo_id` smallint(5) UNSIGNED DEFAULT NULL,
+  `remise` decimal(9,2) NOT NULL DEFAULT 0.00,
   `date_creation` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_commande_numero` (`numero`),
+  KEY `idx_commande_code_promo` (`code_promo_id`),
   KEY `idx_commande_utilisateur` (`utilisateur_id`),
-  CONSTRAINT `fk_commande_utilisateur` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateur` (`id`) ON UPDATE CASCADE
+  CONSTRAINT `fk_commande_utilisateur` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateur` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `fk_commande_code_promo` FOREIGN KEY (`code_promo_id`) REFERENCES `code_promo` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
