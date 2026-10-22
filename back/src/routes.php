@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Controller\AdminCategorieController;
+use App\Controller\AdminCodePromoController;
 use App\Controller\AdminCommandeController;
 use App\Controller\AdminController;
 use App\Controller\AdminProduitController;
@@ -54,6 +55,11 @@ return [
     'GET  /api/admin/commandes'  => [AdminCommandeController::class, 'index'],
     'GET  /api/admin/commande'   => [AdminCommandeController::class, 'show'],
     'POST /api/admin/commandes/statut' => [AdminCommandeController::class, 'statut'],
+    'GET  /api/admin/codes-promo' => [AdminCodePromoController::class, 'index'],
+    'GET  /api/admin/code-promo'  => [AdminCodePromoController::class, 'show'],
+    'POST /api/admin/codes-promo' => [AdminCodePromoController::class, 'create'],
+    'POST /api/admin/codes-promo/modifier'  => [AdminCodePromoController::class, 'update'],
+    'POST /api/admin/codes-promo/supprimer' => [AdminCodePromoController::class, 'remove'],
     'GET  /api/admin/categories' => [AdminCategorieController::class, 'index'],
     'GET  /api/admin/categorie'  => [AdminCategorieController::class, 'show'],
     'POST /api/admin/categories' => [AdminCategorieController::class, 'create'],

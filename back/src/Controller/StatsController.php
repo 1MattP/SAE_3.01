@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Core\Response;
+use App\Model\CodePromoModel;
 use App\Model\CommandeModel;
 use App\Model\ProduitModel;
 
@@ -14,10 +15,13 @@ final class StatsController
 
     private CommandeModel $commandes;
 
-    public function __construct(ProduitModel $produits, CommandeModel $commandes)
+    private CodePromoModel $codes;
+
+    public function __construct(ProduitModel $produits, CommandeModel $commandes, CodePromoModel $codes)
     {
         $this->produits  = $produits;
         $this->commandes = $commandes;
+        $this->codes     = $codes;
     }
 
     public function index(): void
@@ -30,6 +34,7 @@ final class StatsController
             'produits'  => $this->produits->compter(0),
             'commandes' => $this->commandes->compter(),
             'categories' => count($this->produits->categories()),
+            'codesPromo' => $this->codes->compter(),
         ]);
     }
 

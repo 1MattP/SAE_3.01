@@ -14,6 +14,7 @@ let AdminNavView = {
       htmlToFragment(genericRenderer(templateItem, { lien: "/admin/produits", label: "Produits", count: `(${stats.produits})` })),
       htmlToFragment(genericRenderer(templateItem, { lien: "/admin/commandes", label: "Commandes", count: `(${stats.commandes})` })),
       htmlToFragment(genericRenderer(templateItem, { lien: "/admin/categories", label: "Catégories", count: `(${stats.categories})` })),
+      htmlToFragment(genericRenderer(templateItem, { lien: "/admin/codes-promo", label: "Codes promo", count: `(${stats.codesPromo})` })),
       htmlToFragment(genericRenderer(templateItem, { lien: "/admin/statistiques", label: "Statistiques", count: "" })),
     ];
     fragment.querySelector('slot[name="items"]').replaceWith(...items);
